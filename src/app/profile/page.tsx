@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { UserCircleIcon, CurrencyDollarIcon, ClockIcon } from '@heroicons/react/24/outline'
+import { UserCircleIcon, CurrencyDollarIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
 import { useWallet } from '@/context/WalletContext'
-import { getUserTransfers, registerUsername, fetchUsername } from '@/utils/contract'
+import { getUserTransfers, registerUsername, getUserByAddress } from '@/utils/contract'
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -12,30 +12,46 @@ const fadeIn = {
   transition: { duration: 0.5 }
 }
 
+type Transfer = {
+  sender: string;
+  recipient: string;
+  amount: number;
+  status: string;
+}
+
 export default function ProfilePage() {
   const { address, balance, signer } = useWallet()
   const [username, setUsername] = useState('')
-  const [transfers, setTransfers] = useState([])
+  const [registeredUsername, setRegisteredUsername] = useState('')
+  const [transfers, setTransfers] = useState<Transfer[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [registeredUsername, setRegisteredUsername] = useState('')
 
   useEffect(() => {
     if (signer && address) {
-      fetchProfileData()
+      fetchTransfers()
+      fetchUsername()
     }
   }, [signer, address])
 
-  const fetchProfileData = async () => {
+  const fetchTransfers = async () => {
+    if (!signer || !address) return;
     try {
       const userTransfers = await getUserTransfers(signer, address)
       setTransfers(userTransfers)
-
-      const fetchedUsername = await fetchUsername(signer, address)
-      setRegisteredUsername(fetchedUsername || 'none')
     } catch (err) {
-      console.error('Failed to fetch profile data:', err)
+      console.error('Failed to fetch transfers:', err)
+    }
+  }
+
+  const fetchUsername = async () => {
+    if (!signer || !address) return;
+    try {
+      const fetchedUsername = await getUserByAddress(signer, address)
+      setRegisteredUsername(fetchedUsername)
+    } catch (err) {
+      console.error('Failed to fetch username:', err)
     }
   }
 
@@ -45,11 +61,6 @@ export default function ProfilePage() {
       setError('Please connect your wallet first')
       return
     }
-    if (registeredUsername !== 'none') {
-      setError('Username already registered.')
-      return
-    }
-
     setIsLoading(true)
     setError('')
     setSuccess('')
@@ -57,8 +68,9 @@ export default function ProfilePage() {
     try {
       await registerUsername(signer, username)
       setSuccess('Username registered successfully!')
+      setRegisteredUsername(username)
       setUsername('')
-      fetchProfileData()  // Refresh profile data after successful registration
+      fetchUsername(); // Re-fetch username to update the state
     } catch (err) {
       setError('Failed to register username. Please try again.')
       console.error(err)
@@ -88,17 +100,19 @@ export default function ProfilePage() {
               <UserCircleIcon className="w-6 h-6 mr-2" />
               Account Information
             </h2>
+            {registeredUsername && (
+              <p className="mb-2"><span className="text-green-400">Username:</span> {registeredUsername}</p>
+            )}
             <p className="mb-2"><span className="text-green-400">Address:</span> {address}</p>
-            <p className="mb-2"><span className="text-green-400">Balance:</span> {balance} GAS</p>
-            <p><span className="text-green-400">Username:</span> {registeredUsername}</p>
+            <p><span className="text-green-400">Balance:</span> {balance} GAS</p>
           </div>
 
-          <div className={`bg-gray-900 p-6 rounded-lg shadow-lg ${registeredUsername !== 'none' ? 'opacity-50' : ''}`}>
-            <h2 className="text-2xl font-semibold mb-4 text-green-400 flex items-center">
-              <UserCircleIcon className="w-6 h-6 mr-2" />
-              Register Username
-            </h2>
-            {registeredUsername === 'none' ? (
+          {!registeredUsername ? (
+            <div className="bg-gray-900 p-6 rounded-lg shadow-lg">
+              <h2 className="text-2xl font-semibold mb-4 text-green-400 flex items-center">
+                <UserCircleIcon className="w-6 h-6 mr-2" />
+                Register Username
+              </h2>
               <form onSubmit={handleRegisterUsername} className="space-y-4">
                 <input
                   type="text"
@@ -120,10 +134,16 @@ export default function ProfilePage() {
                   {isLoading ? 'Processing...' : 'Register Username'}
                 </motion.button>
               </form>
-            ) : (
-              <p className="text-gray-400">Username already registered.</p>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="bg-gray-900 p-6 rounded-lg shadow-lg flex items-center justify-center">
+              <div className="text-center">
+                <CheckCircleIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                <p className="text-xl font-semibold text-green-400">Username Registered</p>
+                <p className="text-gray-400 mt-2">Your username is set to: {registeredUsername}</p>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         <motion.div variants={fadeIn}>
