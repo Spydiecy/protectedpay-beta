@@ -1,6 +1,6 @@
 'use client'
 import { useWallet } from '@/context/WalletContext'
-import TransactionHistory from '@/components/TransactionHistory'
+import TransactionHistory from '@/components/ TransactionHistory'
 
 export default function ProfilePage() {
   const { address, balance } = useWallet()

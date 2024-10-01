@@ -1,25 +1,30 @@
 'use client'
 
 import React from 'react'
-import { motion } from 'framer-motion'
+import { motion, Variants } from 'framer-motion'
 import { 
   ShieldCheckIcon, CurrencyDollarIcon, UserCircleIcon, 
   LockClosedIcon, ArrowPathIcon, CheckCircleIcon
 } from '@heroicons/react/24/outline'
 
-const fadeIn = {
+const fadeIn: Variants = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 }
+  animate: { opacity: 1, y: 0 }
 }
 
-const stagger = {
+const stagger: Variants = {
   animate: {
     transition: {
       staggerChildren: 0.1
     }
   }
 }
+
+const iconHover: Variants = {
+  initial: { scale: 1 },
+  hover: { scale: 1.1, transition: { duration: 0.3 } }
+}
+
 
 export default function Home() {
   return (
@@ -100,8 +105,9 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
   >
     <motion.div 
       className="text-green-400 mb-4"
-      initial={{ rotate: 0 }}
-      whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
+      variants={iconHover}
+      initial="initial"
+      whileHover="hover"
     >
       {icon}
     </motion.div>
@@ -152,8 +158,9 @@ const StepCard: React.FC<{ icon: React.ReactNode; title: string; description: st
   >
     <motion.div 
       className="text-green-400 mb-4"
-      initial={{ rotate: 0 }}
-      whileHover={{ rotate: 360, transition: { duration: 0.6 } }}
+      variants={iconHover}
+      initial="initial"
+      whileHover="hover"
     >
       {icon}
     </motion.div>
