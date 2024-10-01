@@ -3,10 +3,17 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { ethers } from 'ethers';
 
-// Declare ethereum property on window object
+// Define a type for the Ethereum object to remove any
+interface Ethereum {
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, callback: () => void) => void;
+  removeListener: (event: string, callback: () => void) => void;
+}
+
+// Declare the ethereum property on the window object
 declare global {
   interface Window {
-    ethereum?: any;
+    ethereum?: Ethereum;
   }
 }
 
@@ -52,25 +59,31 @@ export const WalletProvider: React.FC<WalletProviderProps> = ({ children }) => {
               method: 'wallet_switchEthereumChain',
               params: [{ chainId: '0xBA9304' }], // 12227332 in hexadecimal
             });
-          } catch (switchError: any) {
-            // This error code indicates that the chain has not been added to MetaMask
-            if (switchError.code === 4902) {
-              await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                  chainId: '0xBA9304',
-                  chainName: 'NeoX Testnet',
-                  nativeCurrency: {
-                    name: 'GAS',
-                    symbol: 'GAS',
-                    decimals: 18
-                  },
-                  rpcUrls: ['https://neoxt4seed1.ngd.network/'],
-                  blockExplorerUrls: ['https://xt4scan.ngd.network/']
-                }],
-              });
+          } catch (switchError) {
+            // Ensure switchError is an object with a code property
+            if (typeof switchError === 'object' && switchError !== null && 'code' in switchError) {
+              const { code } = switchError as { code: number }; // Type assertion
+              // This error code indicates that the chain has not been added to MetaMask
+              if (code === 4902) {
+                await window.ethereum.request({
+                  method: 'wallet_addEthereumChain',
+                  params: [{
+                    chainId: '0xBA9304',
+                    chainName: 'NeoX Testnet',
+                    nativeCurrency: {
+                      name: 'GAS',
+                      symbol: 'GAS',
+                      decimals: 18
+                    },
+                    rpcUrls: ['https://neoxt4seed1.ngd.network/'],
+                    blockExplorerUrls: ['https://xt4scan.ngd.network/']
+                  }],
+                });
+              } else {
+                console.error('Failed to switch network:', switchError);
+              }
             } else {
-              throw switchError;
+              console.error('Unexpected error switching network:', switchError);
             }
           }
         }

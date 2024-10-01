@@ -1,21 +1,29 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback  } from 'react';
 import { motion } from 'framer-motion';
-import { UserCircleIcon, CurrencyDollarIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { useWallet } from '@/context/WalletContext';
 import { getUserTransfers, registerUsername, getUserByAddress } from '@/utils/contract';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 }
+  },
+}
+
+const transferVariants = {
+  initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 },
 };
 
 type Transfer = {
   sender: string;
   recipient: string;
-  amount: number; // This will be in Wei
+  amount: string; // Change to string for large numbers
   timestamp: number;
   status: number; // This represents the TransferStatus enum
   transferId: string; // Add this field for the transaction ID
@@ -37,34 +45,25 @@ export default function ProfilePage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    if (signer && address) {
-      fetchTransfers();
-      fetchUsername();
-    }
-  }, [signer, address]);
-
-  const fetchTransfers = async () => {
+  const fetchTransfers = useCallback(async () => {
     if (!signer || !address) return;
     try {
       const userTransfers = await getUserTransfers(signer, address);
-      console.log(userTransfers); // Log the fetched transfers to check their structure
+      console.log(userTransfers);
 
-      // Convert amounts to Ether and map statuses
       const formattedTransfers = userTransfers.map((transfer: Transfer) => ({
         ...transfer,
-        amount: (transfer.amount / 1e18).toFixed(18), // Convert Wei to Ether (GAS)
-        status: statusLabels[transfer.status] || 'Unknown', // Map status to string
-        transferId: transfer.transferId, // Ensure transaction ID is included
+        amount: (Number(transfer.amount) / 1e18).toFixed(18),
+        status: statusLabels[transfer.status] || 'Unknown',
       }));
 
       setTransfers(formattedTransfers);
     } catch (err) {
       console.error('Failed to fetch transfers:', err);
     }
-  };
+  }, [signer, address]); // Add signer and address as dependencies
 
-  const fetchUsername = async () => {
+  const fetchUsername = useCallback(async () => {
     if (!signer || !address) return;
     try {
       const fetchedUsername = await getUserByAddress(signer, address);
@@ -72,7 +71,14 @@ export default function ProfilePage() {
     } catch (err) {
       console.error('Failed to fetch username:', err);
     }
-  };
+  }, [signer, address]); // Add signer and address as dependencies
+
+  useEffect(() => {
+    if (signer && address) {
+      fetchTransfers();
+      fetchUsername();
+    }
+  }, [signer, address, fetchTransfers, fetchUsername]);
 
   const handleRegisterUsername = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,6 +115,7 @@ export default function ProfilePage() {
         <motion.h1 
           className="text-4xl font-bold mb-8 text-center text-green-400"
           variants={fadeIn}
+          transition={{ duration: 0.5 }}
         >
           Your Profile
         </motion.h1>
@@ -124,7 +131,7 @@ export default function ProfilePage() {
             )}
             <p className="mb-2"><span className="text-green-400">Address:</span> {address}</p>
             <p>
-              <span className="text-green-400">Balance:</span> {balance ? (balance / 1e18).toFixed(18) : 'Loading...'} GAS
+              <span className="text-green-400">Balance:</span> {balance ? balance : 'Loading...'} GAS
             </p>
           </div>
 
@@ -183,15 +190,17 @@ export default function ProfilePage() {
                   <motion.div 
                     key={index} 
                     className="bg-gray-900 p-4 rounded-lg shadow-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
+                    variants={transferVariants}
+                    initial="initial"
+                    animate="animate"
+                    transition={{ duration: 0.5, delay: index * 0.1 }} // Set transition here
                   >
                     <p><span className="text-green-400">Transaction ID:</span> {transfer.transferId}</p>
                     <p><span className="text-green-400">From:</span> {transfer.sender}</p>
                     <p><span className="text-green-400">To:</span> {transfer.recipient}</p>
                     <p><span className="text-green-400">Amount:</span> {transfer.amount} GAS</p>
                     <p><span className="text-green-400">Status:</span> {transfer.status}</p>
+                    <p><span className="text-green-400">Date:</span> {new Date(transfer.timestamp * 1000).toLocaleString()}</p>
                   </motion.div>
                 );
               })}

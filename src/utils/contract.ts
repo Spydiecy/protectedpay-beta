@@ -492,38 +492,56 @@ export const getUserByAddress = async (signer: ethers.Signer, address: string) =
   return await contract.getUserByAddress(address);
 };
 
-// Helper function to listen for events
-export const listenForTransferEvents = (signer: ethers.Signer, callback: (event: any) => void) => {
-  const contract = getContract(signer);
-  contract.on('TransferInitiated', (transferId, sender, recipient, amount, event) => {
-    callback({
-      type: 'TransferInitiated',
-      transferId,
-      sender,
-      recipient,
-      amount: ethers.utils.formatEther(amount),
-      event
-    });
-  });
-  contract.on('TransferClaimed', (transferId, recipient, amount, event) => {
-    callback({
-      type: 'TransferClaimed',
-      transferId,
-      recipient,
-      amount: ethers.utils.formatEther(amount),
-      event
-    });
-  });
-  contract.on('TransferRefunded', (transferId, sender, amount, event) => {
-    callback({
-      type: 'TransferRefunded',
-      transferId,
-      sender,
-      amount: ethers.utils.formatEther(amount),
-      event
-    });
-  });
-  return () => {
-    contract.removeAllListeners();
+// Define a type for the Transfer Event
+interface TransferEvent {
+	type: 'TransferInitiated' | 'TransferClaimed' | 'TransferRefunded';
+	transferId: string;
+	sender?: string; // Optional because it may not be present for all event types
+	recipient?: string; // Optional because it may not be present for all event types
+	amount: string;
+	event: ethers.Event;
+  }
+  
+  // Update the listenForTransferEvents function
+  export const listenForTransferEvents = (
+	signer: ethers.Signer,
+	callback: (event: TransferEvent) => void
+  ) => {
+	const contract = getContract(signer);
+	
+	contract.on('TransferInitiated', (transferId: string, sender: string, recipient: string, amount: ethers.BigNumber, event: ethers.Event) => {
+	  callback({
+		type: 'TransferInitiated',
+		transferId,
+		sender,
+		recipient,
+		amount: ethers.utils.formatEther(amount),
+		event,
+	  });
+	});
+	
+	contract.on('TransferClaimed', (transferId: string, recipient: string, amount: ethers.BigNumber, event: ethers.Event) => {
+	  callback({
+		type: 'TransferClaimed',
+		transferId,
+		recipient,
+		amount: ethers.utils.formatEther(amount),
+		event,
+	  });
+	});
+	
+	contract.on('TransferRefunded', (transferId: string, sender: string, amount: ethers.BigNumber, event: ethers.Event) => {
+	  callback({
+		type: 'TransferRefunded',
+		transferId,
+		sender,
+		amount: ethers.utils.formatEther(amount),
+		event,
+	  });
+	});
+	
+	return () => {
+	  contract.removeAllListeners();
+	};
   };
-};
+  

@@ -2,14 +2,17 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { useWallet } from '@/context/WalletContext'
 import { refundTransfer } from '@/utils/contract'
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.5 }
+  animate: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5 }
+  },
 }
 
 export default function RefundPage() {
