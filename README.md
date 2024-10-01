@@ -2,7 +2,7 @@
 
 ProtectedPay is a secure and user-friendly platform for cryptocurrency transfers on the NeoX blockchain. It provides a safety net for users, allowing them to recover funds sent to incorrect addresses while educating them about proper crypto transfer practices.
 
-![ProtectedPay Homepage](https://example.com/protectedpay-homepage.png)
+![ProtectedPay Homepage](https://github.com/user-attachments/assets/3766376b-d28b-4be9-b379-cd3c4fd94542)
 
 ## Features
 
@@ -15,13 +15,13 @@ ProtectedPay is a secure and user-friendly platform for cryptocurrency transfers
 ## How It Works
 
 1. **Initiate Transfer**: Send crypto to a username or address. Funds are locked in the smart contract.
-   ![Initiate Transfer](https://example.com/initiate-transfer.gif)
+   ![Initiate Transfer](https://github.com/user-attachments/assets/76b0f8d5-98d5-476c-b789-a0da330e42ea)
 
 2. **Recipient Claims**: The recipient claims the transfer using their wallet.
-   ![Claim Transfer](https://example.com/claim-transfer.gif)
+   ![Claim Transfer](https://github.com/user-attachments/assets/b6b47ffa-215c-4e37-9795-e971c0909a74)
 
 3. **Transfer Complete**: Funds are released to the recipient. The transfer is recorded on the blockchain.
-   ![Transfer Complete](https://example.com/transfer-complete.png)
+   ![Transfer Complete](https://github.com/user-attachments/assets/58d7aa00-113d-427b-a021-488398f59f2e)
 
 ## Usage
 
