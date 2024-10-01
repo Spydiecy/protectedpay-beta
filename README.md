@@ -58,7 +58,7 @@ ProtectedPay prioritizes the security of your funds. All transfers are handled t
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue in this repository or contact our support team at support@protectedpay.com.
+If you encounter any issues or have questions, please open an issue in this repository or contact our support team at tanishqgupta322@gmail.com.
 
 ---
 
