@@ -50,7 +50,7 @@ ProtectedPay is a secure and user-friendly platform for cryptocurrency transfers
 
 Check out our video demo to see ProtectedPay in action:
 
-[![ProtectedPay Demo](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=YOUTUBE_VIDEO_ID_HERE)
+[Project Demo](https://www.youtube.com/watch?v=moUzb4HsMRw)
 
 ## Security
 
