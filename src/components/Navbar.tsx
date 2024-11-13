@@ -17,6 +17,8 @@ const Navbar: React.FC = () => {
     { href: '/transfer', label: 'Transfer' },
     { href: '/claim', label: 'Claim' },
     { href: '/refund', label: 'Refund' },
+    { href: '/group-payments', label: 'Group Payments' },
+    { href: '/savings-pots', label: 'Saving Pots' },
   ]
 
   const handleWalletClick = () => {

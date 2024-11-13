@@ -1,14 +1,21 @@
-import './globals.css'
-import { Inter } from 'next/font/google'
-import Navbar from '@/components/Navbar'
-import { WalletProvider } from '@/context/WalletContext'
+import './globals.css';
+import { Inter } from 'next/font/google';
+import Navbar from '@/components/Navbar';
+import RootClientLayout from './RootClientLayout'; // Import the client wrapper
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ 
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
+});
 
 export const metadata = {
-  title: 'ProtectedPay',
-  description: 'Secure and easy crypto transfers',
-}
+  title: 'ProtectedPay | Secure Crypto Transfers on NeoX',
+  description: 'Secure crypto transfers, group payments, and smart savings on the NeoX blockchain',
+  keywords: 'crypto, payments, blockchain, NeoX, DeFi, secure transfers, group payments',
+  authors: [{ name: 'ProtectedPay' }],
+  themeColor: '#10B981',
+};
 
 export default function RootLayout({
   children,
@@ -16,15 +23,25 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <WalletProvider>
-          <div className="min-h-screen bg-gradient-to-b from-background to-secondary">
-            <Navbar />
-            <main className="container mx-auto px-4 py-8">{children}</main>
+    <html lang="en" className={`${inter.variable} antialiased`}>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+      </head>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <RootClientLayout>
+          {/* Main Content */}
+          <div className="relative min-h-screen flex flex-col">
+            <div className="sticky top-0 z-50 backdrop-blur-xl border-b border-green-500/10 bg-black/20">
+              <Navbar />
+            </div>
+            <main className="flex-grow relative z-10">
+              {children}
+            </main>
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-green-500/20 to-transparent" />
           </div>
-        </WalletProvider>
+        </RootClientLayout>
       </body>
     </html>
-  )
+  );
 }
