@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   PlusCircleIcon, 
   ArrowPathIcon,
-  WalletIcon,
+  CurrencyDollarIcon,
   XCircleIcon,
   SparklesIcon,
   CheckCircleIcon,
@@ -212,7 +212,7 @@ export default function SavingsPotsPage() {
             transition={{ duration: 2, repeat: Infinity }}
             className="inline-block mb-6 bg-black/30 p-6 rounded-2xl backdrop-blur-xl border border-green-500/10"
           >
-            <WalletIcon className="w-16 h-16 mx-auto text-green-400" />
+            <CurrencyDollarIcon className="w-16 h-16 mx-auto text-green-400" />
           </motion.div>
           
           <h1 className="text-6xl font-bold mb-6 relative">
@@ -386,7 +386,7 @@ export default function SavingsPotsPage() {
                   className="text-center bg-black/40 backdrop-blur-xl p-12 rounded-2xl border border-green-500/20"
                   variants={itemAnimation}
                 >
-                  <WalletIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                  <CurrencyDollarIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                   <h3 className="text-xl font-semibold text-gray-400 mb-2">No Savings Pots Yet</h3>
                   <p className="text-gray-500">Create your first savings pot to start saving!</p>
                 </motion.div>

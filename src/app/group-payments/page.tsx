@@ -1,13 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   UsersIcon, 
   PlusCircleIcon, 
   ArrowPathIcon,
   UserPlusIcon,
-  XCircleIcon
+  XCircleIcon,
+  CheckCircleIcon
 } from '@heroicons/react/24/outline'
 import { useWallet } from '@/context/WalletContext'
 import { 
@@ -18,14 +19,41 @@ import {
 } from '@/utils/contract'
 import type { GroupPayment, RawContractPayment } from '@/types/interfaces'
 import { LoadingSpinner } from '@/components/Loading'
+import { 
+  formatAmount,
+  truncateAddress,
+  handleError
+} from '@/utils/helpers'
 
-const fadeIn = {
-  initial: { opacity: 0, y: 20 },
-  animate: {
+const containerAnimation = {
+  initial: "initial",
+  animate: "animate",
+  exit: "exit",
+  variants: {
+    initial: { opacity: 0 },
+    animate: {
+      opacity: 1,
+      transition: { when: "beforeChildren", staggerChildren: 0.15 }
+    },
+    exit: {
+      opacity: 0,
+      transition: { when: "afterChildren", staggerChildren: 0.1 }
+    }
+  }
+}
+
+const itemAnimation = {
+  initial: { y: 20, opacity: 0 },
+  animate: { 
+    y: 0, 
     opacity: 1,
-    y: 0,
-    transition: { duration: 0.5 }
+    transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] }
   },
+  exit: { 
+    y: 20, 
+    opacity: 0,
+    transition: { duration: 0.3 }
+  }
 }
 
 const formatPayment = (payment: RawContractPayment, id: string): GroupPayment => ({
@@ -79,6 +107,7 @@ export default function GroupPaymentsPage() {
       setAvailablePayments(participatingPayments)
     } catch (err) {
       console.error('Failed to fetch group payments:', err)
+      setError(handleError(err))
     } finally {
       setIsFetching(false)
     }
@@ -127,8 +156,8 @@ export default function GroupPaymentsPage() {
       setSuccess('Group payment created successfully!')
       resetForm()
       fetchGroupPayments()
-    } catch (err: any) {
-      setError(err.message || 'Failed to create group payment')
+    } catch (err) {
+      setError(handleError(err))
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -142,35 +171,67 @@ export default function GroupPaymentsPage() {
       await contributeToGroupPayment(signer, paymentId, amount)
       setSuccess('Contribution successful!')
       fetchGroupPayments()
-    } catch (err: any) {
-      setError(err.message || 'Failed to contribute to payment')
+    } catch (err) {
+      setError(handleError(err))
     } finally {
       setIsLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-black text-white py-20">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-gray-900 via-black to-green-950">
+      <div className="fixed inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] pointer-events-none" />
+      
       <motion.div 
-        className="container mx-auto px-4"
-        initial="initial"
-        animate="animate"
-        variants={{ animate: { transition: { staggerChildren: 0.1 } } }}
+        className="container mx-auto px-4 py-20 relative z-10"
+        {...containerAnimation}
       >
-        <motion.h1 
-          className="text-4xl font-bold mb-8 text-center text-green-400"
-          variants={fadeIn}
+        {/* Hero Section */}
+        <motion.div 
+          className="text-center mb-16 relative"
+          variants={itemAnimation}
         >
-          Group Payments
-        </motion.h1>
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-green-500/10 rounded-full blur-3xl pointer-events-none" />
+          <motion.div
+            animate={{ 
+              boxShadow: [
+                "0 0 20px rgba(16, 185, 129, 0.2)",
+                "0 0 60px rgba(16, 185, 129, 0.4)",
+                "0 0 20px rgba(16, 185, 129, 0.2)"
+              ]
+            }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="inline-block mb-6 bg-black/30 p-6 rounded-2xl backdrop-blur-xl border border-green-500/10"
+          >
+            <UsersIcon className="w-16 h-16 mx-auto text-green-400" />
+          </motion.div>
+          <h1 className="text-6xl font-bold mb-6 relative">
+            <span className="bg-gradient-to-r from-green-400 via-emerald-300 to-green-500 text-transparent bg-clip-text">
+              Group Payments
+            </span>
+            <motion.span
+              className="absolute -top-2 -right-2 text-2xl"
+              animate={{ rotate: [0, 20, 0], scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              ✨
+            </motion.span>
+          </h1>
+          <p className="text-gray-400 text-xl max-w-2xl mx-auto mb-8 leading-relaxed">
+            Simplify shared expenses with secure group payments on the blockchain
+          </p>
+        </motion.div>
 
         {/* Tabs */}
-        <motion.div className="flex space-x-4 mb-8" variants={fadeIn}>
+        <motion.div 
+          className="flex justify-center space-x-6 mb-12"
+          variants={itemAnimation}
+        >
           <TabButton
             isActive={activeTab === 'create'}
             onClick={() => setActiveTab('create')}
             icon={<PlusCircleIcon className="w-5 h-5" />}
-            text="Create Payment"
+            text="Create New Payment"
           />
           <TabButton
             isActive={activeTab === 'available'}
@@ -188,157 +249,202 @@ export default function GroupPaymentsPage() {
           />
         </motion.div>
 
-        {/* Create Payment Form */}
-        {activeTab === 'create' && (
-          <motion.div 
-            className="max-w-md mx-auto"
-            variants={fadeIn}
+        <AnimatePresence mode="wait">
+          {activeTab === 'create' && (
+            <motion.div 
+            className="container mx-auto px-4 py-20 relative z-10"
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { when: "beforeChildren", staggerChildren: 0.15 }
+              }
+            }}
           >
-            <div className="bg-gray-900 p-8 rounded-lg shadow-lg border border-green-500/20">
-              <form onSubmit={handleCreatePayment} className="space-y-6">
-                <div>
-                  <label className="block mb-2 text-green-400">Recipient Address</label>
-                  <input
-                    type="text"
-                    value={recipient}
-                    onChange={(e) => setRecipient(e.target.value)}
-                    className="w-full p-2 rounded bg-black border border-green-500 text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-                    placeholder="0x..."
-                    required
-                  />
-                </div>
+              <div className="max-w-xl mx-auto bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-green-500/20">
+                <h2 className="text-2xl font-bold mb-6 text-green-400">Create Group Payment</h2>
+                <form onSubmit={handleCreatePayment} className="space-y-6">
+                  <div>
+                    <label className="block mb-2 text-green-400">Recipient Address</label>
+                    <input
+                      type="text"
+                      value={recipient}
+                      onChange={(e) => setRecipient(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                      placeholder="0x..."
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block mb-2 text-green-400">Total Amount (GAS)</label>
-                  <input
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full p-2 rounded bg-black border border-green-500 text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-                    placeholder="0.0"
-                    step="0.000000000000000001"
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block mb-2 text-green-400">Total Amount (GAS)</label>
+                    <input
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                      placeholder="0.0"
+                      step="0.000000000000000001"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block mb-2 text-green-400">Number of Participants</label>
-                  <input
-                    type="number"
-                    value={participants}
-                    onChange={(e) => setParticipants(e.target.value)}
-                    className="w-full p-2 rounded bg-black border border-green-500 text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-                    placeholder="2"
-                    min="2"
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block mb-2 text-green-400">Number of Participants</label>
+                    <input
+                      type="number"
+                      value={participants}
+                      onChange={(e) => setParticipants(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                      placeholder="2"
+                      min="2"
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block mb-2 text-green-400">Remarks</label>
-                  <textarea
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    className="w-full p-2 rounded bg-black border border-green-500 text-white focus:outline-none focus:ring-2 focus:ring-green-400"
-                    placeholder="What's this payment for?"
-                    rows={3}
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block mb-2 text-green-400">Remarks</label>
+                    <textarea
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                      placeholder="What's this payment for?"
+                      rows={3}
+                      required
+                    />
+                  </div>
 
-                {error && (
-                  <motion.p 
-                    className="text-red-500 bg-red-500/10 p-3 rounded-lg"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {error}
-                  </motion.p>
-                )}
-
-                {success && (
-                  <motion.p 
-                    className="text-green-500 bg-green-500/10 p-3 rounded-lg"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                  >
-                    {success}
-                  </motion.p>
-                )}
-
-                <motion.button
-                  type="submit"
-                  className="w-full bg-green-500 text-black px-4 py-3 rounded-lg font-semibold flex items-center justify-center space-x-2 hover:bg-green-400 transition-all duration-300 disabled:opacity-50"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  disabled={isLoading || !signer}
-                >
-                  {isLoading ? (
-                    <>
-                      <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                      <span>Processing...</span>
-                    </>
-                  ) : (
-                    <>
-                      <PlusCircleIcon className="w-5 h-5" />
-                      <span>Create Group Payment</span>
-                    </>
+                  {error && (
+                    <motion.div 
+                      className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      {error}
+                    </motion.div>
                   )}
-                </motion.button>
 
-                {!signer && (
-                  <p className="text-center text-gray-400 text-sm">
-                    Connect your wallet to create group payments
-                  </p>
-                )}
-              </form>
-            </div>
-          </motion.div>
-        )}
+                  {success && (
+                    <motion.div 
+                      className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                    >
+                      {success}
+                    </motion.div>
+                  )}
 
-        {/* Available Payments */}
-        {activeTab === 'available' && (
-          <motion.div variants={fadeIn}>
-            {isFetching ? (
-              <LoadingSpinner />
-            ) : availablePayments.length === 0 ? (
-              <p className="text-center text-gray-400">No available group payments found.</p>
-            ) : (
-              <div className="grid gap-4">
-                {availablePayments.map((payment) => (
-                  <PaymentCard
-                    key={payment.id}
-                    payment={payment}
-                    onContribute={handleContribute}
-                    isLoading={isLoading}
-                  />
-                ))}
+                  <motion.button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 transition-all duration-200"
+                    disabled={isLoading || !signer}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                        <span>Creating Payment...</span>
+                      </>
+                    ) : (
+                      <>
+                        <PlusCircleIcon className="w-5 h-5" />
+                        <span>Create Group Payment</span>
+                      </>
+                    )}
+                  </motion.button>
+
+                  {!signer && (
+                    <p className="text-center text-gray-400 text-sm">
+                      Connect your wallet to create group payments
+                    </p>
+                  )}
+                </form>
               </div>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* My Payments */}
-        {activeTab === 'my-payments' && (
-          <motion.div variants={fadeIn}>
-            {isFetching ? (
-              <LoadingSpinner />
-            ) : myGroupPayments.length === 0 ? (
-              <p className="text-center text-gray-400">You haven't created any group payments yet.</p>
-            ) : (
-              <div className="grid gap-4">
-                {myGroupPayments.map((payment) => (
-                  <PaymentCard
-                    key={payment.id}
-                    payment={payment}
-                    isCreator
-                    isLoading={isLoading}
-                  />
-                ))}
-              </div>
-            )}
-          </motion.div>
-        )}
+          {activeTab === 'available' && (
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { when: "beforeChildren", staggerChildren: 0.15 }
+                }
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              {isFetching ? (
+                <LoadingSpinner />
+              ) : availablePayments.length === 0 ? (
+                <motion.div 
+                  className="text-center bg-black/40 backdrop-blur-xl p-12 rounded-2xl border border-green-500/20"
+                  variants={itemAnimation}
+                >
+                  <UserPlusIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-400 mb-2">No Available Payments</h3>
+                  <p className="text-gray-500">There are no group payments available for you to contribute to at the moment.</p>
+                </motion.div>
+              ) : (
+                <div className="grid gap-6">
+                  {availablePayments.map((payment) => (
+                    <PaymentCard
+                      key={payment.id}
+                      payment={payment}
+                      onContribute={handleContribute}
+                      isLoading={isLoading}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {activeTab === 'my-payments' && (
+            <motion.div 
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { when: "beforeChildren", staggerChildren: 0.15 }
+                }
+              }}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+            >
+              {isFetching ? (
+                <LoadingSpinner />
+              ) : myGroupPayments.length === 0 ? (
+                <motion.div 
+                  className="text-center bg-black/40 backdrop-blur-xl p-12 rounded-2xl border border-green-500/20"
+                  variants={itemAnimation}
+                >
+                  <UsersIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                  <h3 className="text-xl font-semibold text-gray-400 mb-2">No Created Payments</h3>
+                  <p className="text-gray-500">You haven't created any group payments yet.</p>
+                </motion.div>
+              ) : (
+                <div className="grid gap-6">
+                  {myGroupPayments.map((payment) => (
+                    <PaymentCard
+                      key={payment.id}
+                      payment={payment}
+                      isCreator
+                      isLoading={isLoading}
+                    />
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </div>
   )
@@ -355,18 +461,40 @@ interface TabButtonProps {
 const TabButton: React.FC<TabButtonProps> = ({ isActive, onClick, icon, text, count }) => (
   <motion.button
     onClick={onClick}
-    className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
-      isActive ? 'bg-green-500 text-black' : 'bg-gray-800 text-white'
-    }`}
-    whileHover={{ scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    className={`
+      relative px-6 py-3 rounded-xl font-medium
+      transition-all duration-300 ease-out
+      ${isActive 
+        ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-black shadow-lg shadow-green-500/25' 
+        : 'bg-black/40 backdrop-blur-xl border border-green-500/20 text-white hover:border-green-500/40'
+      }
+    `}
+    whileHover={{ scale: 1.05, y: -2 }}
+    whileTap={{ scale: 0.98 }}
   >
-    {icon}
-    <span>{text}</span>
-    {count !== undefined && (
-      <span className="bg-black/20 px-2 py-0.5 rounded-full text-sm">
-        {count}
-      </span>
+    <div className="flex items-center space-x-2">
+      {icon}
+      <span>{text}</span>
+      {count !== undefined && (
+        <motion.span 
+          className={`
+            px-2 py-0.5 rounded-full text-xs
+            ${isActive ? 'bg-black/20' : 'bg-green-500/20'}
+          `}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 25 }}
+        >
+          {count}
+        </motion.span>
+      )}
+    </div>
+    {isActive && (
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-xl blur-xl -z-10"
+        layoutId="activeTab"
+        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+      />
     )}
   </motion.button>
 );
@@ -386,99 +514,83 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
 }) => {
   const progress = (Number(payment.amountCollected) / Number(payment.totalAmount)) * 100
 
-  const statusLabels = {
-    0: 'Pending',
-    1: 'Completed',
-    2: 'Cancelled'
-  }
-
-  const statusColors = {
-    0: 'bg-yellow-500/20 text-yellow-500',
-    1: 'bg-green-500/20 text-green-500',
-    2: 'bg-red-500/20 text-red-500'
-  }
-
   return (
     <motion.div 
-      className="bg-gray-900 p-6 rounded-lg border border-green-500/20"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      className="relative group"
+      variants={itemAnimation}
     >
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-green-400">
-            {isCreator ? 'Created Group Payment' : 'Available Payment'}
-          </h3>
-          <p className="text-gray-400 text-sm">
-            For: {payment.recipient}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-400">Progress</p>
-          <p className="text-green-400 font-semibold">
-            {payment.amountCollected} / {payment.totalAmount} GAS
-          </p>
-        </div>
-      </div>
-
-      <div className="mb-4">
-      <div className="w-full bg-gray-800 rounded-full h-2">
-          <motion.div 
-            className="bg-green-500 h-2 rounded-full"
-            initial={{ width: 0 }}
-            animate={{ width: `${progress}%` }}
-            transition={{ duration: 1 }}
-          />
-        </div>
-        <div className="flex justify-between mt-1 text-sm text-gray-400">
-          <span>{Math.round(progress)}% funded</span>
-          <span>{payment.numParticipants} participants</span>
-        </div>
-      </div>
-
-      <p className="text-gray-400 text-sm mb-4">{payment.remarks}</p>
-
-      <div className="flex justify-between items-center">
-        <div className="text-sm text-gray-500">
-          {new Date(payment.timestamp * 1000).toLocaleString()}
-        </div>
-        
-        {!isCreator && onContribute && payment.status === 0 && (
-          <motion.button
-            onClick={() => onContribute(payment.id, payment.amountPerPerson)}
-            className="bg-green-500 text-black px-4 py-2 rounded-lg font-semibold flex items-center space-x-2 hover:bg-green-400 transition-all duration-300 disabled:opacity-50"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <>
-                <ArrowPathIcon className="w-5 h-5 animate-spin" />
-                <span>Processing...</span>
-              </>
-            ) : (
-              <>
-                <UserPlusIcon className="w-5 h-5" />
-                <span>Contribute {payment.amountPerPerson} GAS</span>
-              </>
-            )}
-          </motion.button>
-        )}
-
-        {payment.status !== 0 && (
+      <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="relative bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-green-500/20 group-hover:border-green-500/40 transition-all duration-300">
+        <div className="flex justify-between items-start mb-6">
+          <div>
+            <h3 className="text-xl font-semibold text-green-400 mb-1">{isCreator ? 'Created Payment' : 'Available Payment'}</h3>
+            <p className="text-gray-400 text-sm flex items-center space-x-2">
+              <span>For: {truncateAddress(payment.recipient)}</span>
+              <span className="inline-block w-1 h-1 rounded-full bg-gray-500" />
+              <span>{new Date(payment.timestamp * 1000).toLocaleString()}</span>
+            </p>
+          </div>
           <span className={`px-3 py-1 rounded-full text-sm ${
-            statusColors[payment.status as keyof typeof statusColors]
+            payment.status === 0 
+              ? 'bg-yellow-500/20 text-yellow-400' 
+              : payment.status === 1
+                ? 'bg-green-500/20 text-green-400'
+                : 'bg-red-500/20 text-red-400'
           }`}>
-            {statusLabels[payment.status as keyof typeof statusLabels]}
+            {payment.status === 0 ? 'Pending' : payment.status === 1 ? 'Completed' : 'Cancelled'}
           </span>
-        )}
-      </div>
-
-      {payment.status === 0 && (
-        <div className="mt-4 text-xs text-gray-400">
-          Each participant contributes {payment.amountPerPerson} GAS
         </div>
-      )}
+
+        <div className="mb-6">
+          <div className="h-3 bg-black/50 rounded-full overflow-hidden">
+            <motion.div 
+              className="h-full bg-gradient-to-r from-green-500 to-emerald-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 1, ease: "easeOut" }}
+            />
+          </div>
+          <div className="flex justify-between mt-2 text-sm">
+            <span className="text-gray-400">{Math.round(progress)}% funded</span>
+            <span className="text-green-400 font-medium">
+              {formatAmount(payment.amountCollected)} / {formatAmount(payment.totalAmount)} GAS
+            </span>
+          </div>
+        </div>
+
+        {payment.remarks && (
+          <div className="mb-6 p-4 rounded-xl bg-green-500/5 border border-green-500/10">
+            <p className="text-gray-400 text-sm">{payment.remarks}</p>
+          </div>
+        )}
+
+        <div className="flex justify-between items-center">
+          {!isCreator && onContribute && payment.status === 0 && (
+            <motion.button
+              onClick={() => onContribute(payment.id, payment.amountPerPerson)}
+              className="bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 py-3 rounded-xl font-semibold flex items-center space-x-2 hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 transition-all duration-200"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <CheckCircleIcon className="w-5 h-5" />
+                  <span>Contribute {formatAmount(payment.amountPerPerson)} GAS</span>
+                </>
+              )}
+            </motion.button>
+          )}
+          <div className="text-sm text-gray-400">
+            {payment.numParticipants} participants
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 };

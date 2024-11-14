@@ -14,7 +14,6 @@ export const metadata = {
   description: 'Secure crypto transfers, group payments, and smart savings on the NeoX blockchain',
   keywords: 'crypto, payments, blockchain, NeoX, DeFi, secure transfers, group payments',
   authors: [{ name: 'ProtectedPay' }],
-  themeColor: '#10B981',
 };
 
 export default function RootLayout({
