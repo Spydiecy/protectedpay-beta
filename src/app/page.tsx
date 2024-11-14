@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
 import { motion, useScroll, useTransform, Variants } from 'framer-motion';
 import { 
   ShieldCheckIcon, CurrencyDollarIcon, UserCircleIcon, 
@@ -41,9 +41,17 @@ const iconFloat: Variants = {
   }
 };
 
-// Floating objects component
-const FloatingObjects = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+const FloatingObjects = () => {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true); // Set client flag after component mounts
+  }, []);
+
+  if (!isClient) return null; // Prevent rendering on server
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
     {[...Array(20)].map((_, i) => (
       <motion.div
         key={i}
@@ -71,7 +79,8 @@ const FloatingObjects = () => (
       />
     ))}
   </div>
-);
+  );
+};
 
 // Enhanced Hero section
 const Hero = () => {
@@ -197,36 +206,6 @@ const FeatureCard: React.FC<{ icon: React.ReactNode; title: string; description:
   </motion.div>
 );
 
-// Enhanced StepCard component
-const StepCard: React.FC<{ icon: React.ReactNode; title: string; description: string; step: number }> = ({
-  icon,
-  title,
-  description,
-  step
-}) => (
-  <motion.div
-    className="relative group perspective-1000"
-    variants={fadeIn}
-    whileHover={{ scale: 1.02, rotateY: 5 }}
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-    
-    <div className="relative bg-black/40 backdrop-blur-xl p-6 rounded-xl border border-green-500/20 group-hover:border-green-500/40 transition-all duration-500">
-      <motion.div 
-        className="text-green-400 mb-4 group-hover:text-green-300 transition-colors"
-        variants={iconFloat}
-      >
-        {icon}
-      </motion.div>
-      <h4 className="text-xl font-semibold mb-2 text-green-400 group-hover:text-green-300 transition-colors">{title}</h4>
-      <p className="text-gray-400 text-sm group-hover:text-gray-300 transition-colors">{description}</p>
-      <div className="absolute -top-2 -right-2 bg-gradient-to-r from-green-500 to-emerald-500 text-black font-bold px-4 py-1 rounded-full text-sm group-hover:scale-110 transition-transform">
-        {step}
-      </div>
-    </div>
-  </motion.div>
-);
-
 // Features section
 const Features = () => (
   <motion.section
@@ -281,25 +260,6 @@ const Features = () => (
       </div>
     </div>
   </motion.section>
-);
-
-// New component for the connecting lines
-const ConnectingLines = () => (
-  <svg className="absolute left-0 top-0 w-full h-full pointer-events-none z-0">
-    <defs>
-      <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" stopColor="rgba(34, 197, 94, 0.2)" />
-        <stop offset="100%" stopColor="rgba(16, 185, 129, 0.2)" />
-      </linearGradient>
-    </defs>
-    <path
-      d="M0 0"
-      stroke="url(#lineGradient)"
-      strokeWidth="2"
-      fill="none"
-      className="connecting-line"
-    />
-  </svg>
 );
 
 const HowItWorks = () => {
