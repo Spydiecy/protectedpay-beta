@@ -1272,18 +1272,32 @@ export const getSavingsPotDetails = async (signer: ethers.Signer, potId: string)
 };
 
 // Transaction History Functions
-export const getUserTransfers = async (signer: ethers.Signer, userAddress: string) => {
-  const contract = getContract(signer);
-  const transfers = await contract.getUserTransfers(userAddress);
-  return transfers.map((transfer: any) => ({
-    sender: transfer.sender,
-    recipient: transfer.recipient,
-    amount: ethers.utils.formatEther(transfer.amount),
-    timestamp: new Date(transfer.timestamp.toNumber() * 1000),
-    status: transfer.status,
-    remarks: transfer.remarks
-  }));
-};
+interface RawContractTransfer {
+	sender: string;
+	recipient: string;
+	amount: ethers.BigNumber;
+	timestamp: ethers.BigNumber;
+	status: number;
+	remarks: string;
+  }
+  
+  export const getUserTransfers = async (
+	signer: ethers.Signer,
+	userAddress: string
+  ): Promise<Transfer[]> => {
+	const contract = getContract(signer);
+	const transfers: RawContractTransfer[] = await contract.getUserTransfers(userAddress);
+  
+	return transfers.map((transfer: RawContractTransfer) => ({
+	  sender: transfer.sender,
+	  recipient: transfer.recipient,
+	  amount: ethers.utils.formatEther(transfer.amount),
+	  timestamp: transfer.timestamp.toNumber(),
+	  status: transfer.status,
+	  remarks: transfer.remarks,
+	}));
+  };
+  
 
 export const getTransferDetails = async (signer: ethers.Signer, transferId: string) => {
   const contract = getContract(signer);

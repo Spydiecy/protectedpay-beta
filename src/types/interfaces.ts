@@ -1,14 +1,14 @@
 import { ReactNode } from 'react';
 
-export interface RawContractPayment {
+  export interface RawContractPayment {
     creator: string;
     recipient: string;
     totalAmount: string;
     amountPerPerson: string;
-    numParticipants: any;
+    numParticipants: number;
     amountCollected: string;
-    timestamp: any;
-    status: any;
+    timestamp: unknown;
+    status: unknown;
     remarks: string;
   }
   
@@ -31,8 +31,8 @@ export interface RawContractPayment {
     name: string;
     targetAmount: string;
     currentAmount: string;
-    timestamp: any;
-    status: any;
+    timestamp: unknown;
+    status: unknown;
     remarks: string;
   }
   
