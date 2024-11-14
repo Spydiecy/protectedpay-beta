@@ -302,7 +302,6 @@ const ConnectingLines = () => (
   </svg>
 );
 
-// Enhanced How it Works section
 const HowItWorks = () => {
   const sectionRef = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -313,6 +312,73 @@ const HowItWorks = () => {
   const opacity = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0, 1, 1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.2, 0.8, 1], [0.8, 1, 1, 0.8]);
 
+  // Process data
+  const processes = [
+    {
+      title: "Secure Transfers",
+      subtitle: "Send and receive funds securely",
+      steps: [
+        {
+          icon: <LockClosedIcon className="w-12 h-12" />,
+          title: "Send Funds",
+          description: "Initiate a transfer using username or address. Funds are locked securely."
+        },
+        {
+          icon: <ArrowPathIcon className="w-12 h-12" />,
+          title: "Recipient Claims",
+          description: "Recipient claims the transfer using their connected wallet."
+        },
+        {
+          icon: <CheckCircleIcon className="w-12 h-12" />,
+          title: "Transfer Complete",
+          description: "Funds are released to the recipient securely."
+        }
+      ]
+    },
+    {
+      title: "Group Payments",
+      subtitle: "Split expenses effortlessly",
+      steps: [
+        {
+          icon: <UsersIcon className="w-12 h-12" />,
+          title: "Create Group",
+          description: "Set payment amount and number of participants needed."
+        },
+        {
+          icon: <CurrencyDollarIcon className="w-12 h-12" />,
+          title: "Collect Funds",
+          description: "Each participant contributes their share to the pool."
+        },
+        {
+          icon: <ArrowPathIcon className="w-12 h-12" />,
+          title: "Auto Distribution",
+          description: "Funds are automatically sent to recipient when target is met."
+        }
+      ]
+    },
+    {
+      title: "Savings Pots",
+      subtitle: "Achieve your savings goals",
+      steps: [
+        {
+          icon: <BanknotesIcon className="w-12 h-12" />,
+          title: "Create Pot",
+          description: "Set your savings goal and target amount."
+        },
+        {
+          icon: <SparklesIcon className="w-12 h-12" />,
+          title: "Add Funds",
+          description: "Contribute to your pot whenever you want."
+        },
+        {
+          icon: <FireIcon className="w-12 h-12" />,
+          title: "Break Pot",
+          description: "Withdraw your savings when you reach your goal."
+        }
+      ]
+    }
+  ];
+
   return (
     <motion.section
       ref={sectionRef}
@@ -320,14 +386,14 @@ const HowItWorks = () => {
       variants={stagger}
       initial="initial"
       whileInView="animate"
-      viewport={{ once: true, amount: 0.3 }}
+      viewport={{ once: true, amount: 0.2 }}
     >
       <div className="absolute inset-0 bg-gradient-to-b from-black via-green-950/10 to-black" />
       
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <motion.div 
-          className="absolute top-1/4 left-1/4 w-64 h-64 bg-green-500/10 rounded-full blur-[80px]"
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-green-500/10 rounded-full blur-[100px]"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -339,7 +405,7 @@ const HowItWorks = () => {
           }}
         />
         <motion.div 
-          className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-[80px]"
+          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px]"
           animate={{
             scale: [1.2, 1, 1.2],
             opacity: [0.5, 0.3, 0.5],
@@ -365,117 +431,44 @@ const HowItWorks = () => {
           </span>
         </motion.h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 relative">
-          {/* Process columns */}
-          {[
-            {
-              title: "Secure Transfers",
-              steps: [
-                {
-                  icon: <LockClosedIcon className="w-12 h-12" />,
-                  title: "Send Funds",
-                  description: "Initiate a transfer using username or address. Funds are locked securely."
-                },
-                {
-                  icon: <ArrowPathIcon className="w-12 h-12" />,
-                  title: "Recipient Claims",
-                  description: "Recipient claims the transfer using their connected wallet."
-                },
-                {
-                  icon: <CheckCircleIcon className="w-12 h-12" />,
-                  title: "Transfer Complete",
-                  description: "Funds are released to the recipient securely."
-                }
-              ]
-            },
-            {
-              title: "Group Payments",
-              steps: [
-                {
-                  icon: <UsersIcon className="w-12 h-12" />,
-                  title: "Create Group",
-                  description: "Set payment amount and number of participants needed."
-                },
-                {
-                  icon: <CurrencyDollarIcon className="w-12 h-12" />,
-                  title: "Collect Funds",
-                  description: "Each participant contributes their share to the pool."
-                },
-                {
-                  icon: <ArrowPathIcon className="w-12 h-12" />,
-                  title: "Auto Distribution",
-                  description: "Funds are automatically sent to recipient when target is met."
-                }
-              ]
-            },
-            {
-              title: "Savings Pots",
-              steps: [
-                {
-                  icon: <BanknotesIcon className="w-12 h-12" />,
-                  title: "Create Pot",
-                  description: "Set your savings goal and target amount."
-                },
-                {
-                  icon: <SparklesIcon className="w-12 h-12" />,
-                  title: "Add Funds",
-                  description: "Contribute to your pot whenever you want."
-                },
-                {
-                  icon: <FireIcon className="w-12 h-12" />,
-                  title: "Break Pot",
-                  description: "Withdraw your savings when you reach your goal."
-                }
-              ]
-            }
-          ].map((process, processIndex) => (
-            <div key={processIndex} className="relative">
-              <motion.div
-                variants={fadeIn}
-                className="mb-12"
-              >
-                <h3 className="text-3xl font-semibold text-center text-green-400 mb-4">{process.title}</h3>
-                <div className="h-1 w-24 mx-auto bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" />
-              </motion.div>
-
-              <div className="relative">
-                {/* Vertical line */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-green-500/20 via-green-500/40 to-green-500/20" />
-                
-                {/* Steps */}
-                <div className="space-y-16">
-                  {process.steps.map((step, stepIndex) => (
-                    <motion.div
-                      key={stepIndex}
-                      variants={{
-                        initial: { opacity: 0, y: 20 },
-                        animate: { 
-                          opacity: 1, 
-                          y: 0,
-                          transition: { 
-                            duration: 0.5,
-                            delay: stepIndex * 0.2 
-                          }
-                        }
-                      }}
-                      className="relative"
-                    >
-                      {/* Connector dot */}
-                      <div className="absolute left-1/2 top-1/2 w-4 h-4 -ml-2 rounded-full bg-gradient-to-r from-green-500 to-emerald-500">
-                        <div className="absolute inset-0 rounded-full animate-ping bg-green-500/40" />
-                      </div>
-
-                      <EnhancedStepCard
-                        icon={step.icon}
-                        title={step.title}
-                        description={step.description}
-                        step={stepIndex + 1}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
+        <div className="max-w-5xl mx-auto space-y-32">
+          {processes.map((process, processIndex) => (
+            <motion.div
+              key={processIndex}
+              variants={fadeIn}
+              className="relative"
+            >
+              {/* Connecting line between processes */}
+              {processIndex < processes.length - 1 && (
+                <div className="absolute left-1/2 bottom-0 w-px h-32 -mb-32 bg-gradient-to-b from-green-500/40 to-transparent" />
+              )}
+              
+              {/* Process header */}
+              <div className="text-center mb-16">
+                <h3 className="text-4xl font-bold text-green-400 mb-4">{process.title}</h3>
+                <p className="text-xl text-gray-400">{process.subtitle}</p>
+                <div className="h-1 w-32 mx-auto mt-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full" />
               </div>
-            </div>
+
+              {/* Steps */}
+              <div className="grid md:grid-cols-3 gap-8">
+                {process.steps.map((step, stepIndex) => (
+                  <div key={stepIndex} className="relative">
+                    {/* Horizontal connector line between steps */}
+                    {stepIndex < process.steps.length - 1 && (
+                      <div className="hidden md:block absolute top-12 left-full w-full h-px bg-gradient-to-r from-green-500/40 to-transparent -mr-4" />
+                    )}
+                    
+                    <EnhancedStepCard
+                      icon={step.icon}
+                      title={step.title}
+                      description={step.description}
+                      step={stepIndex + 1}
+                    />
+                  </div>
+                ))}
+              </div>
+            </motion.div>
           ))}
         </div>
       </motion.div>
@@ -483,7 +476,7 @@ const HowItWorks = () => {
   );
 };
 
-// Enhanced Step Card with better visual effects
+// Enhanced Step Card component (same as before)
 const EnhancedStepCard: React.FC<{ 
   icon: React.ReactNode; 
   title: string; 
@@ -507,7 +500,6 @@ const EnhancedStepCard: React.FC<{
         className="text-green-400 mb-6 group-hover:text-green-300 transition-colors relative"
         variants={iconFloat}
       >
-        {/* Icon glow effect */}
         <div className="absolute inset-0 bg-green-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         {icon}
       </motion.div>
@@ -515,7 +507,6 @@ const EnhancedStepCard: React.FC<{
       <h4 className="text-2xl font-semibold mb-3 text-green-400 group-hover:text-green-300 transition-colors">{title}</h4>
       <p className="text-gray-400 text-base leading-relaxed group-hover:text-gray-300 transition-colors">{description}</p>
       
-      {/* Enhanced step indicator */}
       <div className="absolute -top-3 -right-3 transform group-hover:scale-110 transition-all duration-300">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full blur-lg opacity-50" />
