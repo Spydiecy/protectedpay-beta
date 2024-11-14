@@ -1,13 +1,12 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   UsersIcon, 
   PlusCircleIcon, 
   ArrowPathIcon,
   UserPlusIcon,
-  XCircleIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline'
 import { useWallet } from '@/context/WalletContext'
@@ -84,41 +83,39 @@ export default function GroupPaymentsPage() {
   const [myGroupPayments, setMyGroupPayments] = useState<GroupPayment[]>([])
   const [availablePayments, setAvailablePayments] = useState<GroupPayment[]>([])
 
-  const fetchGroupPayments = async () => {
-    if (!signer || !address) return
-    setIsFetching(true)
+  const fetchGroupPayments = useCallback(async () => {
+    if (!signer || !address) return;
+    setIsFetching(true);
     try {
-      const profile = await getUserProfile(signer, address)
+      const profile = await getUserProfile(signer, address);
       
       // Fetch created group payments
       const paymentPromises = profile.groupPaymentIds.map(async (id) => {
-        const payment = await getGroupPaymentDetails(signer, id)
-        return formatPayment(payment as RawContractPayment, id)
-      })
-      const payments = await Promise.all(paymentPromises)
-      setMyGroupPayments(payments)
+        const payment = await getGroupPaymentDetails(signer, id);
+        return formatPayment(payment as RawContractPayment, id);
+      });
+      const payments = await Promise.all(paymentPromises);
+      setMyGroupPayments(payments);
 
       // Fetch participating payments
       const participatingPromises = profile.participatedGroupPayments.map(async (id) => {
-        const payment = await getGroupPaymentDetails(signer, id)
-        return formatPayment(payment as RawContractPayment, id)
-      })
-      const participatingPayments = await Promise.all(participatingPromises)
-      setAvailablePayments(participatingPayments)
+        const payment = await getGroupPaymentDetails(signer, id);
+        return formatPayment(payment as RawContractPayment, id);
+      });
+      const participatingPayments = await Promise.all(participatingPromises);
+      setAvailablePayments(participatingPayments);
     } catch (err) {
-      console.error('Failed to fetch group payments:', err)
-      setError(handleError(err))
+      console.error('Failed to fetch group payments:', err);
+      setError(handleError(err));
     } finally {
-      setIsFetching(false)
+      setIsFetching(false);
     }
-  }
+  }, [signer, address]);
 
   useEffect(() => {
-    if (signer && address) {
-      fetchGroupPayments()
-    }
-  }, [signer, address])
-
+      fetchGroupPayments();
+  }, [fetchGroupPayments]);
+  
   const resetForm = () => {
     setRecipient('')
     setAmount('')
@@ -428,7 +425,7 @@ export default function GroupPaymentsPage() {
                 >
                   <UsersIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                   <h3 className="text-xl font-semibold text-gray-400 mb-2">No Created Payments</h3>
-                  <p className="text-gray-500">You haven't created any group payments yet.</p>
+                  <p className="text-gray-500">You haven&apos;t created any group payments yet.</p>
                 </motion.div>
               ) : (
                 <div className="grid gap-6">

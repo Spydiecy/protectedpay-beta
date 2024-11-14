@@ -231,8 +231,12 @@ export default function ProfilePage() {
       setSuccess('Username registered successfully! 🎉');
       setRegisteredUsername(username);
       setUsername('');
-    } catch (err: any) {
-      setError(err.message || 'Failed to register username. Please try again.');
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to register username. Please try again.');
+      } else {
+        setError('Failed to register username. Please try again.');
+      }
       console.error(err);
     } finally {
       setIsLoading(false);
