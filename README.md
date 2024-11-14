@@ -1,65 +1,104 @@
 # ProtectedPay
 
-ProtectedPay is a secure and user-friendly platform for cryptocurrency transfers on the NeoX blockchain. It provides a safety net for users, allowing them to recover funds sent to incorrect addresses while educating them about proper crypto transfer practices.
+ProtectedPay is a comprehensive DeFi platform on the NeoX blockchain that provides secure transfers, group payments, and smart savings features. Built with advanced security and user experience in mind, it offers multiple ways to manage and protect your crypto assets.
 
-![ProtectedPay Homepage](https://github.com/user-attachments/assets/3766376b-d28b-4be9-b379-cd3c4fd94542)
+![image](https://github.com/user-attachments/assets/ea8a2e94-dad2-48cd-af7f-88e08d0e37a8)
 
-## Features
+## Key Features
 
-- **Secure Transfers**: Your funds are protected until the recipient claims them.
-- **Username Support**: Send funds using easy-to-remember usernames instead of long addresses.
-- **Easy Refunds**: Easily refund your transfer if sent to the wrong address.
-- **User-Friendly Interface**: A sleek, modern UI with clear instructions and feedback.
-- **Transaction History**: Keep track of all your transfers in one place.
+### Secure Transfers
+- Protected transfers with funds held in smart contracts until claimed
+- Send to usernames or wallet addresses
+- Add remarks to track transfer purposes
+- Easy refunds for unclaimed transfers
+
+### Group Payments
+- Create group payment pools
+- Automatic splitting of bills and expenses
+- Real-time progress tracking
+- Instant distribution when target is met
+- Perfect for shared expenses and team payments
+
+### Savings Pots
+- Create personal savings goals
+- Track progress towards targets
+- Contribute anytime
+- Break pots when needed
+- Set remarks for saving purposes
+
+### User Features
+- Optional username registration
+- Comprehensive transaction history
+- Real-time balance tracking
+- Detailed activity dashboard
+- Progress visualization
 
 ## How It Works
 
-1. **Initiate Transfer**: Send crypto to a username or address. Funds are locked in the smart contract.
-   ![Initiate Transfer](https://github.com/user-attachments/assets/76b0f8d5-98d5-476c-b789-a0da330e42ea)
+### Secure Transfers
+![image](https://github.com/user-attachments/assets/0522d7ca-f364-40f2-a071-71ad63abc72e)
+1. Send funds to username or address
+2. Add remarks for context
+3. Recipient claims funds
+4. Option to refund if unclaimed
 
-2. **Recipient Claims**: The recipient claims the transfer using their wallet.
-   ![Claim Transfer](https://github.com/user-attachments/assets/b6b47ffa-215c-4e37-9795-e971c0909a74)
+### Group Payments
+![image](https://github.com/user-attachments/assets/43f78c9e-ecb2-47d4-8bec-6e506fc3ad29)
+1. Create payment with target amount
+2. Set number of participants
+3. Members contribute their share
+4. Automatic distribution when complete
 
-3. **Transfer Complete**: Funds are released to the recipient. The transfer is recorded on the blockchain.
-   ![Transfer Complete](https://github.com/user-attachments/assets/58d7aa00-113d-427b-a021-488398f59f2e)
+### Savings Pots
+![image](https://github.com/user-attachments/assets/26fcdbc5-a6d3-4e48-84d9-ba6ac28613ac)
+1. Create pot with target amount
+2. Add funds progressively
+3. Track savings progress
+4. Break pot to withdraw funds
 
-## Usage
+## User Interface
 
-### Sending Funds
+![image](https://github.com/user-attachments/assets/39e544b8-92a4-4d72-b04e-668212a2b321)
 
-1. Connect your wallet by clicking the "Connect Wallet" button in the top right corner.
-2. Navigate to the "Transfer" page.
-3. Enter the recipient's username or address and the amount you want to send.
-4. Click "Transfer" and confirm the transaction in your wallet.
+### Modern Design
+- Dark theme with neon accents
+- Glassmorphism effects
+- Responsive layout
+- Interactive animations
+- Real-time updates
 
-### Claiming Funds
-
-1. Connect your wallet.
-2. Go to the "Claim" page.
-3. Enter the sender's address, username, or the transfer ID.
-4. Click "Claim Transfer" and confirm the transaction in your wallet.
-
-### Refunding a Transfer
-
-1. Connect your wallet.
-2. Navigate to the "Refund" page.
-3. Enter the transfer ID of the unclaimed transfer you want to refund.
-4. Click "Refund Transfer" and confirm the transaction in your wallet.
-
-## Video Demo
-
-Check out our video demo to see ProtectedPay in action:
-
-[Project Demo](https://www.youtube.com/watch?v=moUzb4HsMRw)
+### Dashboard Features
+- Activity history
+- Transaction tracking
+- Progress visualization
+- Quick actions
+- Status indicators
 
 ## Security
 
-ProtectedPay prioritizes the security of your funds. All transfers are handled through smart contracts on the NeoX blockchain, ensuring transparency and immutability. However, always exercise caution when transferring cryptocurrency and double-check all details before confirming transactions.
+- Smart contract secured
+- Protected transfers
+- Non-custodial design
+- Safe fund recovery
+- Transparent transactions
+
+## Video Demo
+
+Watch ProtectedPay in action:
+[Demo Video](video_link)
+
+## Smart Contract
+
+Deployed on NeoX:
+- Contract Address: 0xF93132d75c20EfeD556EC2Bc5aC777750665D3a9
+- Verified on NeoX Explorer
 
 ## Support
 
-If you encounter any issues or have questions, please open an issue in this repository or contact our support team at tanishqgupta322@gmail.com.
+For questions or issues:
+- Email: tanishqgupta322@gmail.com
+- Open an issue in this repository
 
 ---
 
-ProtectedPay - Secure, Easy, and Protected Crypto Transfers
+ProtectedPay - Secure Transfers, Group Payments, and Smart Savings on NeoX
