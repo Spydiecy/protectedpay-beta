@@ -612,13 +612,6 @@ const PotCard: React.FC<PotCardProps> = ({ pot, onContribute, onBreak, isLoading
             </div>
           </motion.div>
         )}
-
-        {/* Hover Effect Overlay */}
-        <motion.div
-          className="absolute inset-0 rounded-2xl bg-gradient-to-r from-green-500/0 to-emerald-500/0 opacity-0 group-hover:opacity-10 transition-opacity duration-300"
-          initial={false}
-          whileHover={{ scale: 1.02 }}
-        />
       </div>
     </motion.div>
   );
