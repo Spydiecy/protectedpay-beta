@@ -24,6 +24,12 @@ import {
   handleError
 } from '@/utils/helpers'
 
+const toastAnimation = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
 const containerAnimation = {
   initial: "initial",
   animate: "animate",
@@ -464,7 +470,7 @@ export default function GroupPaymentsPage() {
 
                 {/* Available Payments Section */}
                 <motion.div variants={itemAnimation}>
-                  <h3 className="text-xl font-semibold text-green-400 mb-4">Payments Completed</h3>
+                  <h3 className="text-xl font-semibold text-green-400 mb-4">Payments Contributed To</h3>
                   {isFetching ? (
                     <LoadingSpinner />
                   ) : availablePayments.length === 0 ? (
@@ -599,7 +605,18 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
   isCreator = false, 
   isLoading 
 }) => {
-  const progress = (Number(payment.amountCollected) / Number(payment.totalAmount)) * 100
+  const [showCopyToast, setShowCopyToast] = useState(false);
+  const progress = (Number(payment.amountCollected) / Number(payment.totalAmount)) * 100;
+
+  const handleCopyId = async () => {
+    try {
+      await navigator.clipboard.writeText(payment.id);
+      setShowCopyToast(true);
+      setTimeout(() => setShowCopyToast(false), 2000); // Hide after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy ID:', err);
+    }
+  };
 
   return (
     <motion.div 
@@ -608,17 +625,17 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
     >
       <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-green-500/20 group-hover:border-green-500/40 transition-all duration-300">
-        {/* Add Payment ID Section */}
-        <div className="mb-6 p-4 rounded-xl bg-black/30 border border-green-500/20">
+        {/* Payment ID Section */}
+        <div className="mb-6 p-4 rounded-xl bg-black/30 border border-green-500/20 relative">
           <div className="flex justify-between items-center">
             <div className="text-sm text-gray-400">Payment ID</div>
             <motion.button
-              onClick={() => navigator.clipboard.writeText(payment.id)}
-              className="text-xs text-green-400 hover:text-green-300 transition-colors"
+              onClick={handleCopyId}
+              className="text-xs text-green-400 hover:text-green-300 transition-colors flex items-center space-x-1 px-2 py-1 rounded-lg bg-green-500/10 hover:bg-green-500/20"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              Copy ID
+              <span>Copy ID</span>
             </motion.button>
           </div>
           <div className="mt-1 font-mono text-green-400 break-all">{payment.id}</div>
@@ -627,6 +644,24 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
               Share this ID with participants to let them contribute
             </div>
           )}
+
+          {/* Copy Success Toast */}
+          <AnimatePresence>
+            {showCopyToast && (
+              <motion.div
+                className="absolute top-0 right-0 transform -translate-y-full -translate-x-1/2 mt-4"
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                variants={toastAnimation}
+              >
+                <div className="bg-green-500 text-black px-4 py-2 rounded-xl shadow-xl flex items-center space-x-2">
+                  <CheckCircleIcon className="w-4 h-4" />
+                  <span className="text-sm font-medium">ID Copied!</span>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="flex justify-between items-start mb-6">
