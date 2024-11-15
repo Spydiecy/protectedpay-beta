@@ -474,7 +474,7 @@ export default function GroupPaymentsPage() {
                     >
                       <UserPlusIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
                       <h3 className="text-xl font-semibold text-gray-400 mb-2">No Available Payments</h3>
-                      <p className="text-gray-500">You haven't been invited to any group payments yet.</p>
+                      <p className="text-gray-500">You haven&apos;t been invited to any group payments yet.</p>
                     </motion.div>
                   ) : (
                     <div className="grid gap-6">
