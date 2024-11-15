@@ -82,6 +82,7 @@ export default function GroupPaymentsPage() {
   const [success, setSuccess] = useState('')
   const [myGroupPayments, setMyGroupPayments] = useState<GroupPayment[]>([])
   const [availablePayments, setAvailablePayments] = useState<GroupPayment[]>([])
+  const [paymentId, setPaymentId] = useState('')
 
   const fetchGroupPayments = useCallback(async () => {
     if (!signer || !address) return;
@@ -231,10 +232,10 @@ export default function GroupPaymentsPage() {
             text="Create New Payment"
           />
           <TabButton
-            isActive={activeTab === 'available'}
-            onClick={() => setActiveTab('available')}
+            isActive={activeTab === 'contribute'}
+            onClick={() => setActiveTab('contribute')}
             icon={<UserPlusIcon className="w-5 h-5" />}
-            text="Available Payments"
+            text="Contribute to Payment"
             count={availablePayments.length}
           />
           <TabButton
@@ -364,7 +365,7 @@ export default function GroupPaymentsPage() {
             </motion.div>
           )}
 
-          {activeTab === 'available' && (
+          {activeTab === 'contribute' && (
             <motion.div 
               variants={{
                 hidden: { opacity: 0 },
@@ -377,29 +378,118 @@ export default function GroupPaymentsPage() {
               animate="visible"
               exit="hidden"
             >
-              {isFetching ? (
-                <LoadingSpinner />
-              ) : availablePayments.length === 0 ? (
+              <div className="max-w-xl mx-auto">
+                {/* Contribute Form */}
                 <motion.div 
-                  className="text-center bg-black/40 backdrop-blur-xl p-12 rounded-2xl border border-green-500/20"
+                  className="bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-green-500/20 mb-12"
                   variants={itemAnimation}
                 >
-                  <UserPlusIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-400 mb-2">No Available Payments</h3>
-                  <p className="text-gray-500">There are no group payments available for you to contribute to at the moment.</p>
+                  <h2 className="text-2xl font-bold mb-6 text-green-400">Contribute to Group Payment</h2>
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    if (paymentId) handleContribute(paymentId, amount);
+                  }} className="space-y-6">
+                    <div>
+                      <label className="block mb-2 text-green-400">Payment ID</label>
+                      <input
+                        type="text"
+                        value={paymentId}
+                        onChange={(e) => setPaymentId(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                        placeholder="Enter group payment ID"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block mb-2 text-green-400">Amount (GAS)</label>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl bg-black/50 border border-green-500/20 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500/40 transition-all duration-200"
+                        placeholder="0.0"
+                        step="0.000000000000000001"
+                        required
+                      />
+                    </div>
+
+                    {error && (
+                      <motion.div 
+                        className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {error}
+                      </motion.div>
+                    )}
+
+                    {success && (
+                      <motion.div 
+                        className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                      >
+                        {success}
+                      </motion.div>
+                    )}
+
+                    <motion.button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-black px-6 py-3 rounded-xl font-semibold flex items-center justify-center space-x-2 hover:brightness-110 disabled:opacity-50 disabled:hover:brightness-100 transition-all duration-200"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      disabled={isLoading || !signer}
+                    >
+                      {isLoading ? (
+                        <>
+                          <ArrowPathIcon className="w-5 h-5 animate-spin" />
+                          <span>Contributing...</span>
+                        </>
+                      ) : (
+                        <>
+                          <UserPlusIcon className="w-5 h-5" />
+                          <span>Contribute to Payment</span>
+                        </>
+                      )}
+                    </motion.button>
+
+                    {!signer && (
+                      <p className="text-center text-gray-400 text-sm">
+                        Connect your wallet to contribute to group payments
+                      </p>
+                    )}
+                  </form>
                 </motion.div>
-              ) : (
-                <div className="grid gap-6">
-                  {availablePayments.map((payment) => (
-                    <PaymentCard
-                      key={payment.id}
-                      payment={payment}
-                      onContribute={handleContribute}
-                      isLoading={isLoading}
-                    />
-                  ))}
-                </div>
-              )}
+
+                {/* Available Payments Section */}
+                <motion.div variants={itemAnimation}>
+                  <h3 className="text-xl font-semibold text-green-400 mb-4">Payments Completed</h3>
+                  {isFetching ? (
+                    <LoadingSpinner />
+                  ) : availablePayments.length === 0 ? (
+                    <motion.div 
+                      className="text-center bg-black/40 backdrop-blur-xl p-12 rounded-2xl border border-green-500/20"
+                      variants={itemAnimation}
+                    >
+                      <UserPlusIcon className="w-16 h-16 mx-auto text-gray-600 mb-4" />
+                      <h3 className="text-xl font-semibold text-gray-400 mb-2">No Available Payments</h3>
+                      <p className="text-gray-500">You haven't been invited to any group payments yet.</p>
+                    </motion.div>
+                  ) : (
+                    <div className="grid gap-6">
+                      {availablePayments.map((payment) => (
+                        <PaymentCard
+                          key={payment.id}
+                          payment={payment}
+                          onContribute={handleContribute}
+                          isLoading={isLoading}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              </div>
             </motion.div>
           )}
 
@@ -518,6 +608,27 @@ const PaymentCard: React.FC<PaymentCardProps> = ({
     >
       <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="relative bg-black/40 backdrop-blur-xl p-8 rounded-2xl border border-green-500/20 group-hover:border-green-500/40 transition-all duration-300">
+        {/* Add Payment ID Section */}
+        <div className="mb-6 p-4 rounded-xl bg-black/30 border border-green-500/20">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-400">Payment ID</div>
+            <motion.button
+              onClick={() => navigator.clipboard.writeText(payment.id)}
+              className="text-xs text-green-400 hover:text-green-300 transition-colors"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Copy ID
+            </motion.button>
+          </div>
+          <div className="mt-1 font-mono text-green-400 break-all">{payment.id}</div>
+          {isCreator && (
+            <div className="mt-2 text-xs text-gray-400">
+              Share this ID with participants to let them contribute
+            </div>
+          )}
+        </div>
+
         <div className="flex justify-between items-start mb-6">
           <div>
             <h3 className="text-xl font-semibold text-green-400 mb-1">{isCreator ? 'Created Payment' : 'Available Payment'}</h3>
