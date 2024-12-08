@@ -21,8 +21,6 @@ import { useWallet } from '@/context/WalletContext'
 const navItems = [
   { href: '/', label: 'Home', icon: <HomeIcon className="w-5 h-5" /> },
   { href: '/transfer', label: 'Transfer', icon: <ArrowRightIcon className="w-5 h-5" /> },
-  { href: '/claim', label: 'Claim', icon: <CheckCircleIcon className="w-5 h-5" /> },
-  { href: '/refund', label: 'Refund', icon: <ArrowLeftIcon className="w-5 h-5" /> },
   { href: '/group-payments', label: 'Group Payments', icon: <UsersIcon className="w-5 h-5" /> },
   { href: '/savings-pots', label: 'Saving Pots', icon: <BanknotesIcon className="w-5 h-5" /> },
 ]
