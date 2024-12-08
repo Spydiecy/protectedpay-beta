@@ -14,7 +14,8 @@ import {
   BanknotesIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
-import { useWallet } from '@/context/WalletContext'
+import { useAccount, useDisconnect } from 'wagmi'
+import { useConnectModal } from '@rainbow-me/rainbowkit'
 
 const navItems = [
   { href: '/', label: 'Home', icon: <HomeIcon className="w-5 h-5" /> },
@@ -25,14 +26,16 @@ const navItems = [
 
 const Navbar: React.FC = () => {
   const pathname = usePathname()
-  const { address, connectWallet, disconnectWallet } = useWallet()
+  const { address } = useAccount()
+  const { openConnectModal } = useConnectModal()
+  const { disconnect } = useDisconnect()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const handleWalletClick = () => {
     if (address) {
-      disconnectWallet()
+      disconnect()
     } else {
-      connectWallet()
+      openConnectModal?.()
     }
   }
 
@@ -208,6 +211,7 @@ const Navbar: React.FC = () => {
                   </Link>
                 )}
 
+                {/* Mobile Wallet Button */}
                 <motion.button
                   onClick={() => {
                     handleWalletClick()

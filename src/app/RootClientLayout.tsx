@@ -1,8 +1,19 @@
-"use client";
+'use client'
 
 import { WalletProvider } from '@/context/WalletContext';
+import { useEffect, useState } from 'react';
 
 export default function RootClientLayout({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <WalletProvider>
       {/* Background Elements */}
