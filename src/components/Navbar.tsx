@@ -9,8 +9,6 @@ import {
   XMarkIcon,
   HomeIcon,
   ArrowRightIcon,
-  CheckCircleIcon,
-  ArrowLeftIcon,
   UsersIcon,
   WalletIcon,
   BanknotesIcon,
