@@ -14,8 +14,8 @@ import {
   BanknotesIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
-import { useAccount, useDisconnect } from 'wagmi'
-import { useConnectModal } from '@rainbow-me/rainbowkit'
+import { useAccount } from 'wagmi'
+import ConnectWallet from './ConnectWallet'
 
 const navItems = [
   { href: '/', label: 'Home', icon: <HomeIcon className="w-5 h-5" /> },
@@ -27,16 +27,10 @@ const navItems = [
 const Navbar: React.FC = () => {
   const pathname = usePathname()
   const { address } = useAccount()
-  const { openConnectModal } = useConnectModal()
-  const { disconnect } = useDisconnect()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
   const handleWalletClick = () => {
-    if (address) {
-      disconnect()
-    } else {
-      openConnectModal?.()
-    }
+    ConnectWallet()
   }
 
   return (
@@ -122,21 +116,7 @@ const Navbar: React.FC = () => {
             )}
 
             {/* Wallet Button */}
-            <motion.button
-              onClick={handleWalletClick}
-              className="relative flex items-center space-x-2 px-4 py-2 rounded-xl font-medium overflow-hidden group"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-300 group-hover:opacity-100 opacity-90" />
-              <WalletIcon className="w-5 h-5 relative text-black" />
-              <span className="relative text-black">
-                {address 
-                  ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                  : 'Connect Wallet'
-                }
-              </span>
-            </motion.button>
+            <ConnectWallet />
           </div>
 
           {/* Mobile Menu Button */}
@@ -212,23 +192,9 @@ const Navbar: React.FC = () => {
                 )}
 
                 {/* Mobile Wallet Button */}
-                <motion.button
-                  onClick={() => {
-                    handleWalletClick()
-                    setIsMenuOpen(false)
-                  }}
-                  className="w-full flex items-center space-x-2 px-4 py-3 rounded-xl font-medium bg-gradient-to-r from-green-500 to-emerald-500 text-black"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <WalletIcon className="w-5 h-5" />
-                  <span>
-                    {address 
-                      ? `${address.slice(0, 6)}...${address.slice(-4)}`
-                      : 'Connect Wallet'
-                    }
-                  </span>
-                </motion.button>
+                <div onClick={() => setIsMenuOpen(false)}>
+                  <ConnectWallet />
+                </div>
               </div>
             </motion.div>
           )}
