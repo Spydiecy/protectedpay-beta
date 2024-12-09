@@ -50,7 +50,7 @@ const connectors = connectorsForWallets([
   projectId,
 });
 
-const config = createConfig({
+const wagmiConfig = createConfig({
   connectors,
   chains: [neoXTestnet],
   transports: {
@@ -93,34 +93,20 @@ function WalletState({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     const initializeWallet = async () => {
-      if ((typeof window !== 'undefined' && window.ethereum) || address) {
+      if (typeof window !== 'undefined' && window.ethereum && address) {
         try {
-          let provider: ethers.providers.Provider;
-          let signer: ethers.Signer | null = null;
+          const provider = new ethers.providers.Web3Provider(window.ethereum);
+          const signer = provider.getSigner();
+          const balance = ethers.utils.formatEther(
+            await provider.getBalance(address)
+          );
           
-          if (address && isConnected) {
-            provider = new ethers.providers.JsonRpcProvider('https://neoxt4seed1.ngd.network/');
-            // Using address directly for read operations
-            const balance = await provider.getBalance(address);
-            setState({
-              address,
-              balance: ethers.utils.formatEther(balance),
-              signer: null, // For read-only operations
-              isConnected: true,
-            });
-          } else if (window.ethereum) {
-            const web3Provider = new ethers.providers.Web3Provider(window.ethereum as ethers.providers.ExternalProvider);
-            signer = web3Provider.getSigner();
-            const connectedAddress = await signer.getAddress();
-            const balance = await web3Provider.getBalance(connectedAddress);
-            
-            setState({
-              address: connectedAddress,
-              balance: ethers.utils.formatEther(balance),
-              signer,
-              isConnected: true,
-            });
-          }
+          setState({
+            address,
+            balance,
+            signer,
+            isConnected: true,
+          });
         } catch (error) {
           console.error('Error initializing wallet:', error);
           setState({
@@ -130,6 +116,13 @@ function WalletState({ children }: { children: ReactNode }) {
             isConnected: false,
           });
         }
+      } else if (!address) {
+        setState({
+          address: null,
+          balance: null,
+          signer: null,
+          isConnected: false,
+        });
       }
     };
 
@@ -159,7 +152,7 @@ function WalletState({ children }: { children: ReactNode }) {
 
 export function WalletProvider({ children }: { children: ReactNode }) {
   return (
-    <WagmiProvider config={config}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
@@ -182,4 +175,10 @@ export function useWallet() {
   return context;
 }
 
-export { useAccount } from 'wagmi';
+declare global {
+  interface Window {
+    ethereum?: any;
+  }
+}
+
+export { useAccount, useBalance, useConnect, useDisconnect } from 'wagmi';
