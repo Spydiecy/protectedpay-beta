@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode, useEffect, useState } from 'react';
-import { createConfig, WagmiProvider, useAccount } from 'wagmi';
+import { createConfig, WagmiProvider, useAccount, useBalance as useWagmiBalance } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 import { http } from 'viem';
@@ -12,6 +12,12 @@ import {
   darkTheme 
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
+
+type ExtendedProvider = ethers.providers.ExternalProvider & {
+  on: (event: string, callback: (...args: unknown[]) => void) => void;
+  removeListener: (event: string, callback: (...args: unknown[]) => void) => void;
+  isMetaMask?: boolean;
+};
 
 // Define NeoX Testnet
 const neoXTestnet = {
@@ -84,6 +90,9 @@ function WalletState({ children }: { children: ReactNode }) {
   });
 
   const { address, isConnected } = useAccount();
+  const { data: wagmiBalance } = useWagmiBalance({
+    address: address as `0x${string}` | undefined,
+  });
 
   useEffect(() => {
     setMounted(true);
@@ -95,11 +104,20 @@ function WalletState({ children }: { children: ReactNode }) {
     const initializeWallet = async () => {
       if (typeof window !== 'undefined' && window.ethereum && address) {
         try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum);
-          const signer = provider.getSigner();
-          const balance = ethers.utils.formatEther(
-            await provider.getBalance(address)
+          const provider = new ethers.providers.Web3Provider(
+            window.ethereum as unknown as ExtendedProvider
           );
+          
+          const signer = provider.getSigner();
+          
+          let balance: string;
+          if (wagmiBalance) {
+            // Access the value property of wagmiBalance and convert it to a string
+            balance = ethers.utils.formatEther(wagmiBalance.value.toString());
+          } else {
+            const ethersBalance = await provider.getBalance(address);
+            balance = ethers.utils.formatEther(ethersBalance);
+          }
           
           setState({
             address,
@@ -126,20 +144,45 @@ function WalletState({ children }: { children: ReactNode }) {
       }
     };
 
+    const handleAccountsChanged = () => {
+      initializeWallet();
+    };
+
+    const handleChainChanged = () => {
+      window.location.reload();
+    };
+
     initializeWallet();
 
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', initializeWallet);
-      window.ethereum.on('chainChanged', () => window.location.reload());
+    const ethereum = window.ethereum as unknown as ExtendedProvider;
+    if (ethereum?.on) {
+      ethereum.on('accountsChanged', handleAccountsChanged);
+      ethereum.on('chainChanged', handleChainChanged);
     }
 
     return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', initializeWallet);
-        window.ethereum.removeListener('chainChanged', () => window.location.reload());
+      if (ethereum?.removeListener) {
+        ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        ethereum.removeListener('chainChanged', handleChainChanged);
       }
     };
-  }, [mounted, address, isConnected]);
+  }, [mounted, address, isConnected, wagmiBalance]);
+
+  // Update when wagmiBalance changes
+  useEffect(() => {
+    if (wagmiBalance && address && isConnected) {
+      try {
+        // Properly access the balance value
+        const formattedBalance = ethers.utils.formatEther(wagmiBalance.value.toString());
+        setState(prev => ({
+          ...prev,
+          balance: formattedBalance,
+        }));
+      } catch (error) {
+        console.error('Error formatting balance:', error);
+      }
+    }
+  }, [wagmiBalance, address, isConnected]);
 
   if (!mounted) return null;
 
@@ -173,12 +216,6 @@ export function useWallet() {
     throw new Error('useWallet must be used within a WalletProvider');
   }
   return context;
-}
-
-declare global {
-  interface Window {
-    ethereum?: any;
-  }
 }
 
 export { useAccount, useBalance, useConnect, useDisconnect } from 'wagmi';
