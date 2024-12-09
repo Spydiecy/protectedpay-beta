@@ -1,7 +1,7 @@
 'use client'
 
 import React, { ReactNode, useEffect, useState } from 'react';
-import { createConfig, WagmiProvider } from 'wagmi';
+import { createConfig, WagmiConfig } from 'wagmi';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ethers } from 'ethers';
 import { http } from 'viem';
@@ -13,7 +13,6 @@ import {
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 
-// Define NeoX Testnet
 const neoXTestnet = {
   id: 12227332,
   name: 'NeoX Testnet',
@@ -96,52 +95,104 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!mounted) return;
-
     const initializeWallet = async () => {
-      if (typeof window !== 'undefined' && window.ethereum) {
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
+      // Check for MetaMask or other injected providers
+      const provider = detectProvider();
+      if (!provider) return;
+
+      try {
+        // Request accounts access
+        await provider.request({ method: 'eth_requestAccounts' });
         
-        try {
-          const accounts = await provider.listAccounts();
-          if (accounts.length > 0) {
-            const signer = provider.getSigner();
-            const address = await signer.getAddress();
-            const balance = ethers.utils.formatEther(await provider.getBalance(address));
-            
-            setState({
-              address,
-              balance,
-              signer,
-              isConnected: true,
-            });
-          }
-        } catch (error) {
-          console.error('Error initializing wallet:', error);
-        }
+        // Initialize ethers provider
+        const ethersProvider = new ethers.providers.Web3Provider(provider);
+        
+        // Get signer and address
+        const signer = ethersProvider.getSigner();
+        const address = await signer.getAddress();
+        const balance = ethers.utils.formatEther(await ethersProvider.getBalance(address));
+
+        // Update state
+        setState({
+          address,
+          balance,
+          signer,
+          isConnected: true,
+        });
+      } catch (error) {
+        console.error('Failed to initialize wallet:', error);
+        setState({
+          address: null,
+          balance: null,
+          signer: null,
+          isConnected: false,
+        });
       }
     };
 
-    initializeWallet();
-
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', initializeWallet);
-      window.ethereum.on('chainChanged', () => window.location.reload());
+    // Provider detection helper
+    function detectProvider() {
+      if (typeof window !== 'undefined') {
+        if (window.ethereum) {
+          return window.ethereum;
+        }
+        // Check for MetaMask specifically
+        if (window.ethereum?.isMetaMask) {
+          return window.ethereum;
+        }
+        // Fall back to generic provider
+        const provider = window.ethereum || (window as any).web3?.currentProvider;
+        return provider;
+      }
+      return null;
     }
 
-    return () => {
-      if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', initializeWallet);
-        window.ethereum.removeListener('chainChanged', () => window.location.reload());
-      }
-    };
+    if (mounted) {
+      initializeWallet();
+    }
+
+    // Set up event listeners
+    const provider = detectProvider();
+    if (provider) {
+      provider.on('accountsChanged', () => {
+        initializeWallet();
+      });
+
+      provider.on('chainChanged', () => {
+        window.location.reload();
+      });
+
+      provider.on('connect', () => {
+        initializeWallet();
+      });
+
+      provider.on('disconnect', () => {
+        setState({
+          address: null,
+          balance: null,
+          signer: null,
+          isConnected: false,
+        });
+      });
+
+      return () => {
+        provider.removeListener('accountsChanged', initializeWallet);
+        provider.removeListener('chainChanged', () => window.location.reload());
+        provider.removeListener('connect', initializeWallet);
+        provider.removeListener('disconnect', () => setState({
+          address: null,
+          balance: null,
+          signer: null,
+          isConnected: false,
+        }));
+      };
+    }
   }, [mounted]);
 
-  // Prevent hydration errors
   if (!mounted) return null;
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <WagmiConfig config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           theme={darkTheme({
@@ -154,7 +205,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           </WalletContext.Provider>
         </RainbowKitProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </WagmiConfig>
   );
 }
 
