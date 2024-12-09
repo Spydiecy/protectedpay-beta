@@ -141,7 +141,7 @@ export function WalletProvider({ children }: { children: ReactNode }) {
           return window.ethereum;
         }
         // Fall back to generic provider
-        const provider = window.ethereum || (window as any).web3?.currentProvider;
+        const provider = window.ethereum || ((window as { web3?: { currentProvider: typeof window.ethereum } }).web3?.currentProvider);
         return provider;
       }
       return null;
