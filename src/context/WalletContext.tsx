@@ -99,72 +99,45 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     if (!mounted) return;
 
     const initializeWallet = async () => {
-      try {
-        // Universal provider setup
-        let provider;
-        if (typeof window !== 'undefined') {
-          if (window.ethereum) {
-            provider = new ethers.providers.Web3Provider(window.ethereum);
-          } else {
-            provider = new ethers.providers.JsonRpcProvider('https://neoxt4seed1.ngd.network/');
-          }
-
+      if (typeof window !== 'undefined' && window.ethereum) {
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        
+        try {
           const accounts = await provider.listAccounts();
           if (accounts.length > 0) {
             const signer = provider.getSigner();
             const address = await signer.getAddress();
             const balance = ethers.utils.formatEther(await provider.getBalance(address));
-
+            
             setState({
               address,
               balance,
               signer,
               isConnected: true,
             });
-          } else {
-            setState({
-              address: null,
-              balance: null,
-              signer: null,
-              isConnected: false,
-            });
           }
+        } catch (error) {
+          console.error('Error initializing wallet:', error);
         }
-      } catch (error) {
-        console.error('Error initializing wallet:', error);
-        setState({
-          address: null,
-          balance: null,
-          signer: null,
-          isConnected: false,
-        });
       }
     };
 
     initializeWallet();
 
-    // Event listeners
-    const handleAccountsChanged = () => {
-      initializeWallet();
-    };
-
-    const handleChainChanged = () => {
-      window.location.reload();
-    };
-
     if (window.ethereum) {
-      window.ethereum.on('accountsChanged', handleAccountsChanged);
-      window.ethereum.on('chainChanged', handleChainChanged);
+      window.ethereum.on('accountsChanged', initializeWallet);
+      window.ethereum.on('chainChanged', () => window.location.reload());
     }
 
     return () => {
       if (window.ethereum) {
-        window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
-        window.ethereum.removeListener('chainChanged', handleChainChanged);
+        window.ethereum.removeListener('accountsChanged', initializeWallet);
+        window.ethereum.removeListener('chainChanged', () => window.location.reload());
       }
     };
   }, [mounted]);
 
+  // Prevent hydration errors
   if (!mounted) return null;
 
   return (
@@ -175,7 +148,6 @@ export function WalletProvider({ children }: { children: ReactNode }) {
             accentColor: '#22c55e',
             accentColorForeground: 'white',
           })}
-          modalSize="compact"
         >
           <WalletContext.Provider value={state}>
             {children}
