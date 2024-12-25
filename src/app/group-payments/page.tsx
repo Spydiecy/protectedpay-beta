@@ -30,6 +30,7 @@ import {
   handleError
 } from '@/utils/helpers'
 import { getPaymentAmount } from '@/utils/contract'
+import { useChainInfo } from '@/utils/useChainInfo';
 
 const pageTransition = {
   initial: { opacity: 0, y: 20, scale: 0.95 },
@@ -85,6 +86,7 @@ export default function GroupPaymentsPage() {
   const [availablePayments, setAvailablePayments] = useState<GroupPayment[]>([])
   const [paymentId, setPaymentId] = useState('')
   const [copiedPaymentId, setCopiedPaymentId] = useState<string | null>(null);
+  const { currentChain } = useChainInfo();
 
   const handlePaymentIdChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const id = e.target.value;
