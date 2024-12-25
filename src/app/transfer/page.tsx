@@ -25,6 +25,7 @@ import {
   getPendingTransfers,
   getTransferDetails
 } from '@/utils/contract'
+import { useChainInfo } from '@/utils/useChainInfo';
 
 enum TransferTabs {
   SEND = 'send',
@@ -73,6 +74,7 @@ export default function TransferPage() {
   const [pendingTransfers, setPendingTransfers] = useState<Transfer[]>([])
   const [pendingSentTransfers, setPendingSentTransfers] = useState<Transfer[]>([])
   const { signer, address } = useWallet()
+  const { currentChain } = useChainInfo();
 
   const fetchPendingTransfers = useCallback(async () => {
     if (!signer || !address) return
@@ -225,7 +227,7 @@ export default function TransferPage() {
             </div>
 
             <div>
-              <label className="mb-2 text-green-400 font-medium">Amount (GAS)</label>
+              <label className="mb-2 text-green-400 font-medium">Amount ({currentChain.symbol})</label>
               <input
                 type="number"
                 value={amount}
@@ -369,7 +371,7 @@ export default function TransferPage() {
                       `From: ${transfer.sender}` : 
                       `To: ${transfer.recipient}`}
                   </div>
-                  <div className="text-green-400 font-semibold">{transfer.amount} GAS</div>
+                  <div className="text-green-400 font-semibold">{transfer.amount} {currentChain.symbol}</div>
                 </div>
                 <motion.button
                   onClick={() => {
