@@ -1,7 +1,11 @@
 import { ethers } from 'ethers';
 
-const contractAddress = '0xF93132d75c20EfeD556EC2Bc5aC777750665D3a9';
-const contractABI = [
+const CONTRACT_ADDRESSES = {
+	12227332: '0xF93132d75c20EfeD556EC2Bc5aC777750665D3a9', // NeoX Testnet
+	656476: '0x03c4fb7563e593ca0625C1c64959AC56081785cE', // EDU Chain Testnet
+} as const;
+  
+const CONTRACT_ABI = [
 	{
 		"inputs": [
 			{
@@ -1055,224 +1059,46 @@ const contractABI = [
 
 // Types for all events and returns
 interface TransferEvent {
-  type: 'TransferInitiated' | 'TransferClaimed' | 'TransferRefunded';
-  transferId: string;
-  sender?: string;
-  recipient?: string;
-  amount: string;
-  remarks?: string;
-  event: ethers.Event;
-}
-
-interface GroupPaymentEvent {
-  type: 'GroupPaymentCreated' | 'GroupPaymentContributed' | 'GroupPaymentCompleted';
-  paymentId: string;
-  creator?: string;
-  recipient?: string;
-  amount: string;
-  numParticipants?: number;
-  remarks?: string;
-  event: ethers.Event;
-}
-
-interface SavingsPotEvent {
-  type: 'SavingsPotCreated' | 'PotContribution' | 'PotBroken';
-  potId: string;
-  owner?: string;
-  amount?: string;
-  name?: string;
-  targetAmount?: string;
-  remarks?: string;
-  event: ethers.Event;
-}
-
-interface UserProfile {
-  username: string;
-  transferIds: string[];
-  groupPaymentIds: string[];
-  participatedGroupPayments: string[];
-  savingsPotIds: string[];
-}
-
-// Contract instance getter
-export const getContract = (signer: ethers.Signer) => {
-  return new ethers.Contract(contractAddress, contractABI, signer);
-};
-
-// User Registration and Management
-export const registerUsername = async (signer: ethers.Signer, username: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.registerUsername(username);
-  await tx.wait();
-};
-
-export const getUserByUsername = async (signer: ethers.Signer, username: string) => {
-  const contract = getContract(signer);
-  return await contract.getUserByUsername(username);
-};
-
-export const getUserByAddress = async (signer: ethers.Signer, address: string) => {
-  const contract = getContract(signer);
-  return await contract.getUserByAddress(address);
-};
-
-export const getUserProfile = async (signer: ethers.Signer, userAddress: string): Promise<UserProfile> => {
-  const contract = getContract(signer);
-  return await contract.getUserProfile(userAddress);
-};
-
-// Basic Transfer Functions
-export const sendToAddress = async (signer: ethers.Signer, recipient: string, amount: string, remarks: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.sendToAddress(recipient, remarks, { value: ethers.utils.parseEther(amount) });
-  await tx.wait();
-};
-
-export const sendToUsername = async (signer: ethers.Signer, username: string, amount: string, remarks: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.sendToUsername(username, remarks, { value: ethers.utils.parseEther(amount) });
-  await tx.wait();
-};
-
-export const claimTransferByAddress = async (signer: ethers.Signer, senderAddress: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.claimTransferByAddress(senderAddress);
-  await tx.wait();
-};
-
-export const claimTransferByUsername = async (signer: ethers.Signer, senderUsername: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.claimTransferByUsername(senderUsername);
-  await tx.wait();
-};
-
-export const claimTransferById = async (signer: ethers.Signer, transferId: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.claimTransferById(transferId);
-  await tx.wait();
-};
-
-export const refundTransfer = async (signer: ethers.Signer, transferId: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.refundTransfer(transferId);
-  await tx.wait();
-};
-
-// Group Payment Functions
-export const createGroupPayment = async (
-  signer: ethers.Signer,
-  recipient: string,
-  numParticipants: number,
-  amount: string,
-  remarks: string
-) => {
-  const contract = getContract(signer);
-  const tx = await contract.createGroupPayment(
-    recipient,
-    numParticipants,
-    remarks,
-    { value: ethers.utils.parseEther(amount) }
-  );
-  await tx.wait();
-};
-
-export const contributeToGroupPayment = async (
-  signer: ethers.Signer,
-  paymentId: string,
-  amount: string
-) => {
-  const contract = getContract(signer);
-  const tx = await contract.contributeToGroupPayment(paymentId, {
-    value: ethers.utils.parseEther(amount)
-  });
-  await tx.wait();
-};
-
-export const getGroupPaymentDetails = async (signer: ethers.Signer, paymentId: string) => {
-  const contract = getContract(signer);
-  const details = await contract.getGroupPaymentDetails(paymentId);
-  return {
-    creator: details.creator,
-    recipient: details.recipient,
-    totalAmount: ethers.utils.formatEther(details.totalAmount),
-    amountPerPerson: ethers.utils.formatEther(details.amountPerPerson),
-    numParticipants: details.numParticipants.toNumber(),
-    amountCollected: ethers.utils.formatEther(details.amountCollected),
-    timestamp: new Date(details.timestamp.toNumber() * 1000),
-    status: details.status,
-    remarks: details.remarks
-  };
-};
-
-export const hasContributedToGroupPayment = async (
-  signer: ethers.Signer,
-  paymentId: string,
-  userAddress: string
-) => {
-  const contract = getContract(signer);
-  return await contract.hasContributedToGroupPayment(paymentId, userAddress);
-};
-
-export const getGroupPaymentContribution = async (
-  signer: ethers.Signer,
-  paymentId: string,
-  userAddress: string
-) => {
-  const contract = getContract(signer);
-  const contribution = await contract.getGroupPaymentContribution(paymentId, userAddress);
-  return ethers.utils.formatEther(contribution);
-};
-
-// Savings Pot Functions
-export const createSavingsPot = async (
-  signer: ethers.Signer,
-  name: string,
-  targetAmount: string,
-  remarks: string
-) => {
-  const contract = getContract(signer);
-  const tx = await contract.createSavingsPot(
-    name,
-    ethers.utils.parseEther(targetAmount),
-    remarks
-  );
-  await tx.wait();
-};
-
-export const contributeToSavingsPot = async (
-  signer: ethers.Signer,
-  potId: string,
-  amount: string
-) => {
-  const contract = getContract(signer);
-  const tx = await contract.contributeToSavingsPot(potId, {
-    value: ethers.utils.parseEther(amount)
-  });
-  await tx.wait();
-};
-
-export const breakPot = async (signer: ethers.Signer, potId: string) => {
-  const contract = getContract(signer);
-  const tx = await contract.breakPot(potId);
-  await tx.wait();
-};
-
-export const getSavingsPotDetails = async (signer: ethers.Signer, potId: string) => {
-  const contract = getContract(signer);
-  const details = await contract.getSavingsPotDetails(potId);
-  return {
-    owner: details.owner,
-    name: details.name,
-    targetAmount: ethers.utils.formatEther(details.targetAmount),
-    currentAmount: ethers.utils.formatEther(details.currentAmount),
-    timestamp: new Date(details.timestamp.toNumber() * 1000),
-    status: details.status,
-    remarks: details.remarks
-  };
-};
-
-// Transaction History Functions
-interface RawContractTransfer {
+	type: 'TransferInitiated' | 'TransferClaimed' | 'TransferRefunded';
+	transferId: string;
+	sender?: string;
+	recipient?: string;
+	amount: string;
+	remarks?: string;
+	event: ethers.Event;
+  }
+  
+  interface GroupPaymentEvent {
+	type: 'GroupPaymentCreated' | 'GroupPaymentContributed' | 'GroupPaymentCompleted';
+	paymentId: string;
+	creator?: string;
+	recipient?: string;
+	amount: string;
+	numParticipants?: number;
+	remarks?: string;
+	event: ethers.Event;
+  }
+  
+  interface SavingsPotEvent {
+	type: 'SavingsPotCreated' | 'PotContribution' | 'PotBroken';
+	potId: string;
+	owner?: string;
+	amount?: string;
+	name?: string;
+	targetAmount?: string;
+	remarks?: string;
+	event: ethers.Event;
+  }
+  
+  interface UserProfile {
+	username: string;
+	transferIds: string[];
+	groupPaymentIds: string[];
+	participatedGroupPayments: string[];
+	savingsPotIds: string[];
+  }
+  
+  interface RawContractTransfer {
 	sender: string;
 	recipient: string;
 	amount: ethers.BigNumber;
@@ -1281,11 +1107,248 @@ interface RawContractTransfer {
 	remarks: string;
   }
   
+  export interface Transfer {
+	sender: string;
+	recipient: string;
+	amount: string;
+	timestamp: number;
+	status: number;
+	remarks: string;
+  }
+  
+  export interface GroupPayment {
+	id: string;
+	paymentId: string;
+	creator: string;
+	recipient: string;
+	totalAmount: string;
+	amountPerPerson: string;
+	numParticipants: number;
+	amountCollected: string;
+	timestamp: number;
+	status: number;
+	remarks: string;
+  }
+  
+  export interface SavingsPot {
+	id: string;
+	potId: string;
+	owner: string;
+	name: string;
+	targetAmount: string;
+	currentAmount: string;
+	timestamp: number;
+	status: number;
+	remarks: string;
+  }
+  
+  // Gets the appropriate contract address based on chainId
+  const getContractAddress = async (signer: ethers.Signer) => {
+	const chainId = await signer.getChainId();
+	return CONTRACT_ADDRESSES[chainId as keyof typeof CONTRACT_ADDRESSES] 
+	  || CONTRACT_ADDRESSES[12227332]; // Default to NeoX if chain not found
+  };
+  
+  // Contract instance getter with chain awareness
+  export const getContract = async (signer: ethers.Signer) => {
+	const address = await getContractAddress(signer);
+	return new ethers.Contract(address, CONTRACT_ABI, signer);
+  };
+  
+  // Basic Contract Interaction Functions
+  export const getPaymentAmount = async (signer: ethers.Signer, paymentId: string) => {
+	try {
+	  const contract = await getContract(signer);
+	  const payment = await contract.getGroupPaymentDetails(paymentId);
+	  return ethers.utils.formatEther(payment.amountPerPerson);
+	} catch (error) {
+	  console.error('Error fetching payment amount:', error);
+	  throw error;
+	}
+  };
+  
+  // User Registration and Management
+  export const registerUsername = async (signer: ethers.Signer, username: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.registerUsername(username);
+	await tx.wait();
+  };
+  
+  export const getUserByUsername = async (signer: ethers.Signer, username: string) => {
+	const contract = await getContract(signer);
+	return await contract.getUserByUsername(username);
+  };
+  
+  export const getUserByAddress = async (signer: ethers.Signer, address: string) => {
+	const contract = await getContract(signer);
+	return await contract.getUserByAddress(address);
+  };
+  
+  export const getUserProfile = async (signer: ethers.Signer, userAddress: string): Promise<UserProfile> => {
+	const contract = await getContract(signer);
+	return await contract.getUserProfile(userAddress);
+  };
+  
+  // Transfer Functions
+  export const sendToAddress = async (signer: ethers.Signer, recipient: string, amount: string, remarks: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.sendToAddress(recipient, remarks, { value: ethers.utils.parseEther(amount) });
+	await tx.wait();
+  };
+  
+  export const sendToUsername = async (signer: ethers.Signer, username: string, amount: string, remarks: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.sendToUsername(username, remarks, { value: ethers.utils.parseEther(amount) });
+	await tx.wait();
+  };
+  
+  export const claimTransferByAddress = async (signer: ethers.Signer, senderAddress: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.claimTransferByAddress(senderAddress);
+	await tx.wait();
+  };
+  
+  export const claimTransferByUsername = async (signer: ethers.Signer, senderUsername: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.claimTransferByUsername(senderUsername);
+	await tx.wait();
+  };
+  
+  export const claimTransferById = async (signer: ethers.Signer, transferId: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.claimTransferById(transferId);
+	await tx.wait();
+  };
+  
+  export const refundTransfer = async (signer: ethers.Signer, transferId: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.refundTransfer(transferId);
+	await tx.wait();
+  };
+  
+  // Group Payment Functions
+  export const createGroupPayment = async (
+	signer: ethers.Signer,
+	recipient: string,
+	numParticipants: number,
+	amount: string,
+	remarks: string
+  ) => {
+	const contract = await getContract(signer);
+	const tx = await contract.createGroupPayment(
+	  recipient,
+	  numParticipants,
+	  remarks,
+	  { value: ethers.utils.parseEther(amount) }
+	);
+	await tx.wait();
+  };
+  
+  export const contributeToGroupPayment = async (
+	signer: ethers.Signer,
+	paymentId: string,
+	amount: string
+  ) => {
+	const contract = await getContract(signer);
+	const tx = await contract.contributeToGroupPayment(paymentId, {
+	  value: ethers.utils.parseEther(amount)
+	});
+	await tx.wait();
+  };
+  
+  export const getGroupPaymentDetails = async (signer: ethers.Signer, paymentId: string) => {
+	const contract = await getContract(signer);
+	const details = await contract.getGroupPaymentDetails(paymentId);
+	return {
+	  id: paymentId,
+	  paymentId,
+	  creator: details.creator,
+	  recipient: details.recipient,
+	  totalAmount: ethers.utils.formatEther(details.totalAmount),
+	  amountPerPerson: ethers.utils.formatEther(details.amountPerPerson),
+	  numParticipants: details.numParticipants.toNumber(),
+	  amountCollected: ethers.utils.formatEther(details.amountCollected),
+	  timestamp: details.timestamp.toNumber(),
+	  status: details.status,
+	  remarks: details.remarks
+	};
+  };
+  
+  export const hasContributedToGroupPayment = async (
+	signer: ethers.Signer,
+	paymentId: string,
+	userAddress: string
+  ) => {
+	const contract = await getContract(signer);
+	return await contract.hasContributedToGroupPayment(paymentId, userAddress);
+  };
+  
+  export const getGroupPaymentContribution = async (
+	signer: ethers.Signer,
+	paymentId: string,
+	userAddress: string
+  ) => {
+	const contract = await getContract(signer);
+	const contribution = await contract.getGroupPaymentContribution(paymentId, userAddress);
+	return ethers.utils.formatEther(contribution);
+  };
+  
+  // Savings Pot Functions
+  export const createSavingsPot = async (
+	signer: ethers.Signer,
+	name: string,
+	targetAmount: string,
+	remarks: string
+  ) => {
+	const contract = await getContract(signer);
+	const tx = await contract.createSavingsPot(
+	  name,
+	  ethers.utils.parseEther(targetAmount),
+	  remarks
+	);
+	await tx.wait();
+  };
+  
+  export const contributeToSavingsPot = async (
+	signer: ethers.Signer,
+	potId: string,
+	amount: string
+  ) => {
+	const contract = await getContract(signer);
+	const tx = await contract.contributeToSavingsPot(potId, {
+	  value: ethers.utils.parseEther(amount)
+	});
+	await tx.wait();
+  };
+  
+  export const breakPot = async (signer: ethers.Signer, potId: string) => {
+	const contract = await getContract(signer);
+	const tx = await contract.breakPot(potId);
+	await tx.wait();
+  };
+  
+  export const getSavingsPotDetails = async (signer: ethers.Signer, potId: string) => {
+	const contract = await getContract(signer);
+	const details = await contract.getSavingsPotDetails(potId);
+	return {
+	  id: potId,
+	  potId,
+	  owner: details.owner,
+	  name: details.name,
+	  targetAmount: ethers.utils.formatEther(details.targetAmount),
+	  currentAmount: ethers.utils.formatEther(details.currentAmount),
+	  timestamp: details.timestamp.toNumber(),
+	  status: details.status,
+	  remarks: details.remarks
+	};
+  };
+  
+  // Transaction History Functions
   export const getUserTransfers = async (
 	signer: ethers.Signer,
 	userAddress: string
   ): Promise<Transfer[]> => {
-	const contract = getContract(signer);
+	const contract = await getContract(signer);
 	const transfers: RawContractTransfer[] = await contract.getUserTransfers(userAddress);
   
 	return transfers.map((transfer: RawContractTransfer) => ({
@@ -1298,199 +1361,246 @@ interface RawContractTransfer {
 	}));
   };
   
-
-export const getTransferDetails = async (signer: ethers.Signer, transferId: string) => {
-  const contract = getContract(signer);
-  const transfer = await contract.getTransferDetails(transferId);
-  return {
-    sender: transfer.sender,
-    recipient: transfer.recipient,
-    amount: ethers.utils.formatEther(transfer.amount),
-    timestamp: new Date(transfer.timestamp.toNumber() * 1000),
-    status: transfer.status,
-    remarks: transfer.remarks
+  export const getTransferDetails = async (signer: ethers.Signer, transferId: string) => {
+	const contract = await getContract(signer);
+	const transfer = await contract.getTransferDetails(transferId);
+	return {
+	  sender: transfer.sender,
+	  recipient: transfer.recipient,
+	  amount: ethers.utils.formatEther(transfer.amount),
+	  timestamp: transfer.timestamp.toNumber(),
+	  status: transfer.status,
+	  remarks: transfer.remarks
+	};
   };
-};
-
-export const getPendingTransfers = async (signer: ethers.Signer, userAddress: string) => {
-  const contract = getContract(signer);
-  return await contract.getPendingTransfers(userAddress);
-};
-
-// Event Listeners
-export const listenForAllEvents = (
-  signer: ethers.Signer,
-  callback: (event: TransferEvent | GroupPaymentEvent | SavingsPotEvent) => void
-) => {
-  const contract = getContract(signer);
-
-  // Transfer Events
-  contract.on('TransferInitiated', 
-    (transferId, sender, recipient, amount, remarks, event) => {
-      callback({
-        type: 'TransferInitiated',
-        transferId,
-        sender,
-        recipient,
-        amount: ethers.utils.formatEther(amount),
-        remarks,
-        event
-      });
-    }
-  );
-
-  contract.on('TransferClaimed',
-    (transferId, recipient, amount, event) => {
-      callback({
-        type: 'TransferClaimed',
-        transferId,
-        recipient,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  contract.on('TransferRefunded',
-    (transferId, sender, amount, event) => {
-      callback({
-        type: 'TransferRefunded',
-        transferId,
-        sender,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  // Group Payment Events
-  contract.on('GroupPaymentCreated', 
-    (paymentId, creator, recipient, totalAmount, numParticipants, remarks, event) => {
-      callback({
-        type: 'GroupPaymentCreated',
-        paymentId,
-        creator,
-        recipient,
-        amount: ethers.utils.formatEther(totalAmount),
-        numParticipants,
-        remarks,
-        event
-      });
-    }
-  );
-
-  contract.on('GroupPaymentContributed',
-    (paymentId, contributor, amount, event) => {
-      callback({
-        type: 'GroupPaymentContributed',
-        paymentId,
-        creator: contributor,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  contract.on('GroupPaymentCompleted',
-    (paymentId, recipient, amount, event) => {
-      callback({
-        type: 'GroupPaymentCompleted',
-        paymentId,
-        recipient,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  // Savings Pot Events
-  contract.on('SavingsPotCreated', 
-    (potId, owner, name, targetAmount, remarks, event) => {
-      callback({
-        type: 'SavingsPotCreated',
-        potId,
-        owner,
-        name,
-        targetAmount: ethers.utils.formatEther(targetAmount),
-        remarks,
-        event
-      });
-    }
-  );
-
-  contract.on('PotContribution',
-    (potId, contributor, amount, event) => {
-      callback({
-        type: 'PotContribution',
-        potId,
-        owner: contributor,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  contract.on('PotBroken',
-    (potId, owner, amount, event) => {
-      callback({
-        type: 'PotBroken',
-        potId,
-        owner,
-        amount: ethers.utils.formatEther(amount),
-        event
-      });
-    }
-  );
-
-  return () => {
-    contract.removeAllListeners();
+  
+  export const getPendingTransfers = async (signer: ethers.Signer, userAddress: string) => {
+	const contract = await getContract(signer);
+	return await contract.getPendingTransfers(userAddress);
   };
-};
-
-// Helper Functions
-export const formatAmount = (amount: ethers.BigNumber): string => {
-  return ethers.utils.formatEther(amount);
-};
-
-export const parseAmount = (amount: string): ethers.BigNumber => {
-  return ethers.utils.parseEther(amount);
-};
-
-export const formatTimestamp = (timestamp: ethers.BigNumber): Date => {
-  return new Date(timestamp.toNumber() * 1000);
-};
-
-export interface Transfer {
-	sender: string;
-	recipient: string;
-	amount: string;
-	timestamp: number;  // Make sure this is number
-	status: number;
-	remarks: string;
+  
+  // Event Listeners
+  export const listenForAllEvents = async (
+	signer: ethers.Signer,
+	callback: (event: TransferEvent | GroupPaymentEvent | SavingsPotEvent) => void
+  ) => {
+	const contract = await getContract(signer);
+  
+	// Transfer Events
+	contract.on('TransferInitiated', 
+	  (transferId, sender, recipient, amount, remarks, event) => {
+		callback({
+		  type: 'TransferInitiated',
+		  transferId,
+		  sender,
+		  recipient,
+		  amount: ethers.utils.formatEther(amount),
+		  remarks,
+		  event
+		});
+	  }
+	);
+  
+	contract.on('TransferClaimed',
+	  (transferId, recipient, amount, event) => {
+		callback({
+		  type: 'TransferClaimed',
+		  transferId,
+		  recipient,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	contract.on('TransferRefunded',
+	  (transferId, sender, amount, event) => {
+		callback({
+		  type: 'TransferRefunded',
+		  transferId,
+		  sender,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	// Group Payment Events
+	contract.on('GroupPaymentCreated', 
+	  (paymentId, creator, recipient, totalAmount, numParticipants, remarks, event) => {
+		callback({
+		  type: 'GroupPaymentCreated',
+		  paymentId,
+		  creator,
+		  recipient,
+		  amount: ethers.utils.formatEther(totalAmount),
+		  numParticipants,
+		  remarks,
+		  event
+		});
+	  }
+	);
+  
+	contract.on('GroupPaymentContributed',
+	  (paymentId, contributor, amount, event) => {
+		callback({
+		  type: 'GroupPaymentContributed',
+		  paymentId,
+		  creator: contributor,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	contract.on('GroupPaymentCompleted',
+	  (paymentId, recipient, amount, event) => {
+		callback({
+		  type: 'GroupPaymentCompleted',
+		  paymentId,
+		  recipient,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	// Savings Pot Events
+	contract.on('SavingsPotCreated', 
+	  (potId, owner, name, targetAmount, remarks, event) => {
+		callback({
+		  type: 'SavingsPotCreated',
+		  potId,
+		  owner,
+		  name,
+		  targetAmount: ethers.utils.formatEther(targetAmount),
+		  remarks,
+		  event
+		});
+	  }
+	);
+  
+	contract.on('PotContribution',
+	  (potId, contributor, amount, event) => {
+		callback({
+		  type: 'PotContribution',
+		  potId,
+		  owner: contributor,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	contract.on('PotBroken',
+	  (potId, owner, amount, event) => {
+		callback({
+		  type: 'PotBroken',
+		  potId,
+		  owner,
+		  amount: ethers.utils.formatEther(amount),
+		  event
+		});
+	  }
+	);
+  
+	return () => {
+	  contract.removeAllListeners();
+	};
+  };
+  
+  // Helper Functions
+  export const formatAmount = (amount: ethers.BigNumber): string => {
+	return ethers.utils.formatEther(amount);
+  };
+  
+  export const parseAmount = (amount: string): ethers.BigNumber => {
+	return ethers.utils.parseEther(amount);
+  };
+  
+  export const formatTimestamp = (timestamp: ethers.BigNumber): Date => {
+	return new Date(timestamp.toNumber() * 1000);
+  };
+  
+  // Chain specific helpers
+  export const getCurrentChainId = async (signer: ethers.Signer): Promise<number> => {
+	return await signer.getChainId();
+  };
+  
+  export const getChainNativeCurrency = (chainId: number) => {
+	switch (chainId) {
+	  case 12227332:
+		return {
+		  name: 'GAS',
+		  symbol: 'GAS',
+		  decimals: 18
+		};
+	  case 656476:
+		return {
+		  name: 'EDU',
+		  symbol: 'EDU',
+		  decimals: 18
+		};
+	  default:
+		return {
+		  name: 'GAS',
+		  symbol: 'GAS',
+		  decimals: 18
+		};
+	}
+  };
+  
+  export const getExplorerUrl = (chainId: number) => {
+	switch (chainId) {
+	  case 12227332:
+		return 'https://xt4scan.ngd.network/';
+	  case 656476:
+		return 'https://opencampus-codex.blockscout.com/';
+	  default:
+		return 'https://xt4scan.ngd.network/';
+	}
+  };
+  
+  export const isContractDeployed = async (signer: ethers.Signer): Promise<boolean> => {
+	try {
+	  const address = await getContractAddress(signer);
+	  const provider = signer.provider;
+	  if (!provider) return false;
+	  
+	  const code = await provider.getCode(address);
+	  return code !== '0x';
+	} catch (error) {
+	  console.error('Error checking contract deployment:', error);
+	  return false;
+	}
+  };
+  
+  // Error handling helper
+  export class ContractError extends Error {
+	constructor(
+	  message: string,
+	  public readonly code?: string,
+	  public readonly chainId?: number
+	) {
+	  super(message);
+	  this.name = 'ContractError';
+	}
   }
   
-  export interface GroupPayment {
-	id: string;        // Add this for consistency
-	paymentId: string; // Keep this for backward compatibility
-	creator: string;
-	recipient: string;
-	totalAmount: string;
-	amountPerPerson: string;
-	numParticipants: number;
-	amountCollected: string;
-	timestamp: number;  // Make sure this is number
-	status: number;
-	remarks: string;
-  }
-  
-  export interface SavingsPot {
-	id: string;        // Add this for consistency
-	potId: string;     // Keep this for backward compatibility
-	owner: string;
-	name: string;
-	targetAmount: string;
-	currentAmount: string;
-	timestamp: number;  // Make sure this is number
-	status: number;
-	remarks: string;
-  }
+  export const handleContractError = (error: unknown, chainId?: number): string => {
+	if (error instanceof ContractError) {
+	  return `Chain ${chainId}: ${error.message}`;
+	}
+	
+	if (error instanceof Error) {
+	  if (error.message.includes('user rejected')) {
+		return 'Transaction was rejected by user';
+	  }
+	  if (error.message.includes('insufficient funds')) {
+		return `Insufficient ${getChainNativeCurrency(chainId || 12227332).symbol} for transaction`;
+	  }
+	  return error.message;
+	}
+	
+	return 'An unexpected error occurred';
+  };

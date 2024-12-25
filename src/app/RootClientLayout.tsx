@@ -1,3 +1,5 @@
+// RootClientLayout.tsx
+
 'use client'
 
 import { WalletProvider } from '@/context/WalletContext';

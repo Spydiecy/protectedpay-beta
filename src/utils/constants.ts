@@ -1,3 +1,5 @@
+// utils./constants.ts
+
 export const STATUS_LABELS = {
     0: 'Pending',
     1: 'Completed',

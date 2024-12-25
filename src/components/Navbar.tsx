@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { useAccount, useDisconnect } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
+import ChainSelector from './ChainSelector'
 
 const navItems = [
   { href: '/', label: 'Home', icon: <HomeIcon className="w-5 h-5" /> },
@@ -121,6 +122,9 @@ const Navbar: React.FC = () => {
               </Link>
             )}
 
+            {/* Chain Selector */}
+            <ChainSelector />
+
             {/* Wallet Button */}
             <motion.button
               onClick={handleWalletClick}
@@ -210,6 +214,11 @@ const Navbar: React.FC = () => {
                     </motion.div>
                   </Link>
                 )}
+
+                {/* Chain Selector for Mobile */}
+                <div className="px-4 py-2">
+                  <ChainSelector />
+                </div>
 
                 {/* Mobile Wallet Button */}
                 <motion.button

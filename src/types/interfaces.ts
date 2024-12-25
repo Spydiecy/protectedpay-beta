@@ -1,3 +1,5 @@
+// types/interfaces.ts
+
 import { ReactNode } from 'react';
 
   export interface RawContractPayment {

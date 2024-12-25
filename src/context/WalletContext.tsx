@@ -1,3 +1,5 @@
+// context/WalletContext.tsx
+
 'use client'
 
 import React, { ReactNode, useEffect, useState } from 'react';
@@ -19,10 +21,11 @@ type ExtendedProvider = ethers.providers.ExternalProvider & {
   isMetaMask?: boolean;
 };
 
-// Define NeoX Testnet
+// Define chains
 const neoXTestnet = {
   id: 12227332,
   name: 'NeoX Testnet',
+  network: 'neoxtestnet',
   nativeCurrency: {
     decimals: 18,
     name: 'GAS',
@@ -30,6 +33,9 @@ const neoXTestnet = {
   },
   rpcUrls: {
     default: {
+      http: ['https://neoxt4seed1.ngd.network/']
+    },
+    public: {
       http: ['https://neoxt4seed1.ngd.network/']
     }
   },
@@ -41,6 +47,34 @@ const neoXTestnet = {
   },
   testnet: true,
 } as const;
+
+const eduChainTestnet = {
+  id: 656476,
+  name: 'EDU Chain Testnet',
+  network: 'educhaintestnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'EDU',
+    symbol: 'EDU',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://open-campus-codex-sepolia.drpc.org/']
+    },
+    public: {
+      http: ['https://open-campus-codex-sepolia.drpc.org/']
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: 'EDU Chain Explorer',
+      url: 'https://opencampus-codex.blockscout.com/'
+    }
+  },
+  testnet: true,
+} as const;
+
+const chains = [neoXTestnet, eduChainTestnet] as const;
 
 const projectId = 'b8ad206ba9492e6096fa0aa0f868586c';
 
@@ -58,9 +92,10 @@ const connectors = connectorsForWallets([
 
 const wagmiConfig = createConfig({
   connectors,
-  chains: [neoXTestnet],
+  chains,
   transports: {
     [neoXTestnet.id]: http(),
+    [eduChainTestnet.id]: http(),
   },
 });
 
@@ -112,7 +147,6 @@ function WalletState({ children }: { children: ReactNode }) {
           
           let balance: string;
           if (wagmiBalance) {
-            // Access the value property of wagmiBalance and convert it to a string
             balance = ethers.utils.formatEther(wagmiBalance.value.toString());
           } else {
             const ethersBalance = await provider.getBalance(address);
@@ -168,11 +202,9 @@ function WalletState({ children }: { children: ReactNode }) {
     };
   }, [mounted, address, isConnected, wagmiBalance]);
 
-  // Update when wagmiBalance changes
   useEffect(() => {
     if (wagmiBalance && address && isConnected) {
       try {
-        // Properly access the balance value
         const formattedBalance = ethers.utils.formatEther(wagmiBalance.value.toString());
         setState(prev => ({
           ...prev,
