@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bars3Icon, 
@@ -14,7 +14,7 @@ import {
   BanknotesIcon,
   UserCircleIcon
 } from '@heroicons/react/24/outline'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount, useDisconnect, useChainId } from 'wagmi'
 import { useConnectModal } from '@rainbow-me/rainbowkit'
 import ChainSelector from './ChainSelector'
 
@@ -27,10 +27,26 @@ const navItems = [
 
 const Navbar: React.FC = () => {
   const pathname = usePathname()
+  const router = useRouter()
   const { address } = useAccount()
+  const chainId = useChainId()
   const { openConnectModal } = useConnectModal()
   const { disconnect } = useDisconnect()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [prevChainId, setPrevChainId] = useState<number>()
+
+  useEffect(() => {
+    if (chainId && prevChainId && chainId !== prevChainId) {
+      // Refresh the current page when chain changes
+      router.refresh()
+      
+      // Optional: Add a small delay before refreshing to ensure contract states are updated
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    }
+    setPrevChainId(chainId)
+  }, [chainId, prevChainId, router])
 
   const handleWalletClick = () => {
     if (address) {

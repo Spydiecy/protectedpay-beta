@@ -228,7 +228,7 @@ const Features = () => (
         <FeatureCard
           icon={<ArrowPathIcon className="w-10 h-10 md:w-12 md:h-12" />}
           title="Multi-Chain Support"
-          description="Seamlessly use the same features across NeoX and EDU Chain networks. One interface, multiple chains."
+          description="Seamlessly use the same features across NeoX, Educhain, Flow etc. One interface, multiple chains."
         />
         <FeatureCard
           icon={<UserCircleIcon className="w-10 h-10 md:w-12 md:h-12" />}
@@ -595,6 +595,16 @@ const CallToAction = () => {
               />
               <span className="text-gray-400 text-sm">EDU Chain</span>
             </div>
+            <div className="flex items-center space-x-2 bg-black/30 px-3 py-1.5 rounded-full border border-green-500/20">
+              <Image
+                src="/chains/flow.png"
+                alt="Flow Chain"
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+              <span className="text-gray-400 text-sm">Flow Chain</span>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -614,6 +624,12 @@ const SupportedChains = () => {
       name: 'EDU Chain',
       icon: '/chains/educhain.png',
       description: 'Educational blockchain network',
+      status: 'Live'
+    },
+    {
+      name: 'Flow Chain',
+      icon: '/chains/flow.png',
+      description: 'Scalable and developer-friendly blockchain for next-gen apps',
       status: 'Live'
     }
   ];

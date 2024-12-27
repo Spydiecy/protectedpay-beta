@@ -74,7 +74,34 @@ const eduChainTestnet = {
   testnet: true,
 } as const;
 
-const chains = [neoXTestnet, eduChainTestnet] as const;
+const flowTestnet = {
+  id: 545,
+  hexId: '0x221',
+  name: 'Flow Testnet',
+  network: 'flowtestnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'FLOW',
+    symbol: 'FLOW',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://testnet.evm.nodes.onflow.org']
+    },
+    public: {
+      http: ['https://testnet.evm.nodes.onflow.org']
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: 'Flow Testnet Explorer',
+      url: 'https://evm-testnet.flowscan.io'
+    }
+  },
+  testnet: true,
+} as const;
+
+const chains = [neoXTestnet, eduChainTestnet, flowTestnet] as const;
 
 const projectId = 'b8ad206ba9492e6096fa0aa0f868586c';
 
@@ -96,6 +123,7 @@ const wagmiConfig = createConfig({
   transports: {
     [neoXTestnet.id]: http(),
     [eduChainTestnet.id]: http(),
+    [flowTestnet.id]: http(),
   },
 });
 
