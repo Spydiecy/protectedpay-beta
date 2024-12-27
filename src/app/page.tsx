@@ -605,6 +605,16 @@ const CallToAction = () => {
               />
               <span className="text-gray-400 text-sm">Flow Chain</span>
             </div>
+            <div className="flex items-center space-x-2 bg-black/30 px-3 py-1.5 rounded-full border border-green-500/20">
+              <Image
+                src="/chains/kaia.png"
+                alt="Flow Chain"
+                width={20}
+                height={20}
+                className="rounded-full"
+              />
+              <span className="text-gray-400 text-sm">Kaia Chain</span>
+            </div>
           </motion.div>
         </div>
       </div>
@@ -614,24 +624,10 @@ const CallToAction = () => {
 
 const SupportedChains = () => {
   const chains = [
-    {
-      name: 'NeoX Testnet',
-      icon: '/chains/neox.png',
-      description: 'High-performance Neo Virtual Machine chain',
-      status: 'Live'
-    },
-    {
-      name: 'EDU Chain',
-      icon: '/chains/educhain.png',
-      description: 'Educational blockchain network',
-      status: 'Live'
-    },
-    {
-      name: 'Flow Chain',
-      icon: '/chains/flow.png',
-      description: 'Scalable and developer-friendly blockchain for next-gen apps',
-      status: 'Live'
-    }
+    { name: 'NeoX Testnet', icon: '/chains/neox.png', description: 'High-performance Neo Virtual Machine chain', status: 'Live' },
+    { name: 'EDU Chain', icon: '/chains/educhain.png', description: 'Educational blockchain network', status: 'Live' },
+    { name: 'Flow Chain', icon: '/chains/flow.png', description: 'Scalable blockchain used by NBA, NFL, and Disney.', status: 'Live' },
+    { name: 'Kaia Chain', icon: '/chains/kaia.png', description: 'Blockchain for AI-driven applications', status: 'Live' }
   ];
 
   return (

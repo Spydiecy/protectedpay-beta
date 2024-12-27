@@ -101,7 +101,34 @@ const flowTestnet = {
   testnet: true,
 } as const;
 
-const chains = [neoXTestnet, eduChainTestnet, flowTestnet] as const;
+const kaiatestnet = {
+  id: 1001,
+  hexId: '0x3E9',
+  name: 'KAIA Testnet',
+  network: 'kaiatestnet',
+  nativeCurrency: {
+    decimals: 18,
+    name: 'KAIA',
+    symbol: 'KAIA',
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://kaia-kairos.blockpi.network/v1/rpc/public']
+    },
+    public: {
+      http: ['https://kaia-kairos.blockpi.network/v1/rpc/public']
+    }
+  },
+  blockExplorers: {
+    default: {
+      name: 'KAIA Testnet Explorer',
+      url: 'https://kairos.kaiascope.com/'
+    }
+  },
+  testnet: true,
+} as const;
+
+const chains = [neoXTestnet, eduChainTestnet, flowTestnet, kaiatestnet] as const; 
 
 const projectId = 'b8ad206ba9492e6096fa0aa0f868586c';
 
@@ -124,6 +151,7 @@ const wagmiConfig = createConfig({
     [neoXTestnet.id]: http(),
     [eduChainTestnet.id]: http(),
     [flowTestnet.id]: http(),
+    [kaiatestnet.id]: http(),
   },
 });
 

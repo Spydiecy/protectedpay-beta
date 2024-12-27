@@ -41,6 +41,15 @@ export const supportedChains: ChainInfo[] = [
     symbol: 'FLOW',
     rpcUrl: 'https://testnet.evm.nodes.onflow.org',
     blockExplorerUrl: 'https://evm-testnet.flowscan.io',
+  },
+  {
+    id: 1001,
+    hexId: '0x3E9',
+    name: 'KAIA Testnet',
+    icon: '/chains/kaia.png',
+    symbol: 'KAIA',
+    rpcUrl: 'https://kaia-kairos.blockpi.network/v1/rpc/public',
+    blockExplorerUrl: 'https://kairos.kaiascope.com/',
   }
 ] as const
 
