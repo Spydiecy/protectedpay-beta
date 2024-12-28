@@ -22,40 +22,15 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
-  const isMounted = useRef(true);
 
-  useEffect(() => {
-    return () => {
-      isMounted.current = false;
-      cleanupScanner();
-    };
-  }, []);
-
-  const cleanupScanner = useCallback(async () => {
+  const handleSuccessfulScan = useCallback((data: string) => {
     if (scannerRef.current) {
-      try {
-        await scannerRef.current.stop();
-        scannerRef.current.clear();
-      } catch (error) {
-        console.debug('Scanner cleanup error:', error);
-      } finally {
-        scannerRef.current = null;
-      }
+      scannerRef.current.stop().catch(console.error);
+      scannerRef.current = null;
     }
-  }, []);
-
-  const handleClose = useCallback(async () => {
-    await cleanupScanner();
+    onScan(data);
     setIsOpen(false);
-  }, [cleanupScanner]);
-
-  const handleSuccessfulScan = useCallback(async (data: string) => {
-    await cleanupScanner();
-    if (isMounted.current) {
-      onScan(data);
-      setIsOpen(false);
-    }
-  }, [onScan, cleanupScanner]);
+  }, [onScan]);
 
   useEffect(() => {
     let mounted = true;
@@ -63,10 +38,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     const startScanner = async () => {
       if (isOpen && isCameraMode && isMobile) {
         try {
-          await cleanupScanner(); // Cleanup before starting new instance
-          
-          if (!mounted) return;
-
           const scanner = new Html5Qrcode("reader");
           scannerRef.current = scanner;
 
@@ -76,17 +47,17 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
               fps: 10,
               qrbox: { width: 250, height: 250 },
             },
-            async (decodedText) => {
+            (decodedText) => {
               if (!mounted) return;
               try {
                 const parsedData = JSON.parse(decodedText);
                 console.log("Scanned data:", parsedData);
                 if (parsedData.app === "ProtectedPay" && parsedData.address) {
-                  await handleSuccessfulScan(parsedData.address);
+                  handleSuccessfulScan(parsedData.address);
                 }
               } catch {
                 if (decodedText.startsWith('0x')) {
-                  await handleSuccessfulScan(decodedText);
+                  handleSuccessfulScan(decodedText);
                 }
               }
             },
@@ -94,10 +65,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           );
         } catch (error) {
           console.error('Scanner error:', error);
-          if (mounted) {
-            onError?.('Failed to start camera');
-            setIsCameraMode(false);
-          }
+          onError?.('Failed to start camera');
+          setIsCameraMode(false);
         }
       }
     };
@@ -106,9 +75,12 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
 
     return () => {
       mounted = false;
-      cleanupScanner();
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(console.error);
+        scannerRef.current = null;
+      }
     };
-  }, [isOpen, isCameraMode, handleSuccessfulScan, cleanupScanner, onError]);
+  }, [isOpen, isCameraMode, handleSuccessfulScan, onError]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -122,8 +94,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
       const img = new Image();
 
       img.onload = async () => {
-        if (!isMounted.current) return;
-        
         canvas.width = img.width;
         canvas.height = img.height;
         ctx?.drawImage(img, 0, 0);
@@ -156,16 +126,12 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           onError?.(error instanceof Error ? error.message : 'Failed to read QR code');
         }
         
-        if (isMounted.current) {
-          setIsProcessing(false);
-        }
+        setIsProcessing(false);
       };
 
       img.onerror = () => {
-        if (isMounted.current) {
-          onError?.('Failed to load image');
-          setIsProcessing(false);
-        }
+        onError?.('Failed to load image');
+        setIsProcessing(false);
       };
 
       const reader = new FileReader();
@@ -175,18 +141,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         }
       };
       reader.onerror = () => {
-        if (isMounted.current) {
-          onError?.('Failed to read file');
-          setIsProcessing(false);
-        }
+        onError?.('Failed to read file');
+        setIsProcessing(false);
       };
       reader.readAsDataURL(file);
       
     } catch (error) {
-      if (isMounted.current) {
-        onError?.(error instanceof Error ? error.message : 'Failed to process image');
-        setIsProcessing(false);
-      }
+      onError?.(error instanceof Error ? error.message : 'Failed to process image');
+      setIsProcessing(false);
     }
 
     if (fileInputRef.current) {
@@ -197,28 +159,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
-
-  const renderActionButtons = () => (
-    <div className="fixed bottom-8 left-0 right-0 flex justify-center space-x-4 px-4">
-      <motion.button
-        onClick={triggerFileInput}
-        className="p-4 bg-black/80 backdrop-blur-xl rounded-full border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <PhotoIcon className="w-6 h-6" />
-      </motion.button>
-
-      <motion.button
-        onClick={handleClose}
-        className="p-4 bg-black/80 backdrop-blur-xl rounded-full border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-      >
-        <XMarkIcon className="w-6 h-6" />
-      </motion.button>
-    </div>
-  );
 
   return (
     <>
@@ -243,44 +183,94 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           >
             <div className="p-4 flex justify-between items-center border-b border-green-500/20 bg-black/40">
               <h2 className="text-lg font-semibold text-green-400">Scan QR Code</h2>
-              {isMobile && (
-                <div className="flex rounded-lg overflow-hidden border border-green-500/20 bg-black/40">
-                  <button
-                    onClick={() => setIsCameraMode(true)}
-                    className={`p-2 ${isCameraMode ? 'bg-green-500/20 text-green-400' : 'text-green-400/60 hover:text-green-400'}`}
-                  >
-                    <CameraIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsCameraMode(false);
-                      cleanupScanner();
-                      triggerFileInput();
-                    }}
-                    className={`p-2 ${!isCameraMode ? 'bg-green-500/20 text-green-400' : 'text-green-400/60 hover:text-green-400'}`}
-                  >
-                    <PhotoIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center space-x-4">
+                {isMobile && (
+                  <div className="flex rounded-lg overflow-hidden border border-green-500/20 bg-black/40">
+                    <button
+                      onClick={() => setIsCameraMode(true)}
+                      className={`p-2 ${isCameraMode ? 'bg-green-500/20 text-green-400' : 'text-green-400/60 hover:text-green-400'}`}
+                    >
+                      <CameraIcon className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setIsCameraMode(false);
+                        if (scannerRef.current) {
+                          scannerRef.current.stop().catch(console.error);
+                        }
+                        triggerFileInput();
+                      }}
+                      className={`p-2 ${!isCameraMode ? 'bg-green-500/20 text-green-400' : 'text-green-400/60 hover:text-green-400'}`}
+                    >
+                      <PhotoIcon className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+                <motion.button
+                  onClick={() => {
+                    if (scannerRef.current) {
+                      scannerRef.current.stop().catch(console.error);
+                    }
+                    setIsOpen(false);
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="p-2 rounded-lg text-green-400/60 hover:text-green-400"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </motion.button>
+              </div>
             </div>
 
             <div className="flex-1 flex flex-col items-center justify-center p-4">
               {isMobile ? (
                 isCameraMode ? (
-                  <div className="w-full max-w-sm mx-auto relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
-                    <div className="relative bg-black/50 p-4 rounded-2xl">
-                      <div id="reader" className="overflow-hidden rounded-xl"></div>
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-64 h-64 border-2 border-green-400/50 rounded-lg"></div>
+                    <div className="w-full max-w-sm mx-auto relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
+                      <div className="relative bg-black/50 p-4 rounded-2xl">
+                        <div id="reader" className="overflow-hidden rounded-xl"></div>
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="w-64 h-64 border-2 border-green-400/50 rounded-lg"></div>
+                        </div>
+                        
+                        {/* Fixed buttons at bottom */}
+                        <div className="fixed bottom-8 left-0 right-0 flex justify-center space-x-4 px-4">
+                          {/* Upload Button */}
+                          <motion.button
+                            onClick={() => {
+                              setIsCameraMode(false);
+                              if (scannerRef.current) {
+                                scannerRef.current.stop().catch(console.error);
+                              }
+                              triggerFileInput();
+                            }}
+                            className="p-4 bg-black/80 backdrop-blur-xl rounded-full border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <PhotoIcon className="w-6 h-6" />
+                          </motion.button>
+                  
+                          {/* Close Button */}
+                          <motion.button
+                            onClick={() => {
+                              if (scannerRef.current) {
+                                scannerRef.current.stop().catch(console.error);
+                              }
+                              setIsOpen(false);
+                            }}
+                            className="p-4 bg-black/80 backdrop-blur-xl rounded-full border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <XMarkIcon className="w-6 h-6" />
+                          </motion.button>
+                        </div>
                       </div>
+                      <p className="text-green-400 text-center mt-4 mb-24">
+                        Position the QR code within the frame
+                      </p>
                     </div>
-                    <p className="text-green-400 text-center mt-4 mb-24">
-                      Position the QR code within the frame
-                    </p>
-                    {renderActionButtons()}
-                  </div>
                 ) : (
                   <div
                     onClick={triggerFileInput}
@@ -299,23 +289,20 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                   </div>
                 )
               ) : (
-                <div className="relative">
-                  <div
-                    onClick={triggerFileInput}
-                    className="w-full max-w-sm mx-auto p-8 border-2 border-dashed border-green-500/20 rounded-2xl cursor-pointer hover:border-green-500/40 transition-colors"
-                  >
-                    <div className="flex flex-col items-center space-y-4">
-                      {isProcessing ? (
-                        <ArrowPathIcon className="w-12 h-12 text-green-400 animate-spin" />
-                      ) : (
-                        <PhotoIcon className="w-12 h-12 text-green-400" />
-                      )}
-                      <p className="text-green-400 font-medium text-center">
-                        {isProcessing ? 'Processing...' : 'Click to upload QR code'}
-                      </p>
-                    </div>
+                <div
+                  onClick={triggerFileInput}
+                  className="w-full max-w-sm mx-auto p-8 border-2 border-dashed border-green-500/20 rounded-2xl cursor-pointer hover:border-green-500/40 transition-colors"
+                >
+                  <div className="flex flex-col items-center space-y-4">
+                    {isProcessing ? (
+                      <ArrowPathIcon className="w-12 h-12 text-green-400 animate-spin" />
+                    ) : (
+                      <PhotoIcon className="w-12 h-12 text-green-400" />
+                    )}
+                    <p className="text-green-400 font-medium text-center">
+                      {isProcessing ? 'Processing...' : 'Click to upload QR code'}
+                    </p>
                   </div>
-                  {renderActionButtons()}
                 </div>
               )}
             </div>
