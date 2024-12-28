@@ -1,5 +1,5 @@
 // components/qr/QRScanner.tsx
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCodeIcon, 
@@ -19,8 +19,114 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCameraMode, setIsCameraMode] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  
+  useEffect(() => {
+    let animationFrame: number;
+    let jsQR: typeof import('jsqr').default;
+
+    const processQRCode = async () => {
+      if (!videoRef.current || !canvasRef.current) return;
+
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      const context = canvas.getContext('2d');
+
+      if (!context) return;
+
+      // Set canvas size to match video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      // Draw current video frame
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Get image data
+      const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+      try {
+        if (!jsQR) {
+          // Dynamically import jsQR
+          jsQR = (await import('jsqr')).default;
+        }
+
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+          try {
+            const parsedData = JSON.parse(code.data);
+            if (parsedData.app === "ProtectedPay" && parsedData.address) {
+              handleSuccessfulScan(parsedData.address);
+              return;
+            }
+          } catch {
+            if (code.data.startsWith('0x')) {
+              handleSuccessfulScan(code.data);
+              return;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('QR processing error:', error);
+      }
+
+      // Continue scanning
+      animationFrame = requestAnimationFrame(processQRCode);
+    };
+
+    if (isOpen && isCameraMode && stream) {
+      processQRCode();
+    }
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame);
+      }
+    };
+  }, [isOpen, isCameraMode, stream]);
+
+  // Handle camera setup/cleanup
+  useEffect(() => {
+    const setupCamera = async () => {
+      try {
+        if (isOpen && isCameraMode) {
+          const mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+          });
+          setStream(mediaStream);
+
+          if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream;
+          }
+        }
+      } catch (error) {
+        console.error('Camera setup error:', error);
+        onError?.('Failed to access camera');
+        setIsCameraMode(false);
+      }
+    };
+
+    if (isOpen && isCameraMode) {
+      setupCamera();
+    }
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        setStream(null);
+      }
+    };
+  }, [isOpen, isCameraMode]);
+
+  const handleSuccessfulScan = (data: string) => {
+    onScan(data);
+    setIsOpen(false);
+  };
+
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -28,17 +134,13 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     setIsProcessing(true);
 
     try {
-      // Create a canvas to draw the image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
 
       img.onload = async () => {
-        // Set canvas size to match image
         canvas.width = img.width;
         canvas.height = img.height;
-
-        // Draw image onto canvas
         ctx?.drawImage(img, 0, 0);
 
         try {
@@ -52,14 +154,11 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
               try {
                 const parsedData = JSON.parse(code.data);
                 if (parsedData.app === "ProtectedPay" && parsedData.address) {
-                  onScan(parsedData.address);
-                  setIsOpen(false);
+                  handleSuccessfulScan(parsedData.address);
                 }
               } catch {
-                // If not JSON, check if it's an address
                 if (code.data.startsWith('0x')) {
-                  onScan(code.data);
-                  setIsOpen(false);
+                  handleSuccessfulScan(code.data);
                 }
               }
             } else {
@@ -78,16 +177,11 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         setIsProcessing(false);
       };
 
-      // Read the file as data URL
       const reader = new FileReader();
       reader.onload = (e) => {
         if (typeof e.target?.result === 'string') {
           img.src = e.target.result;
         }
-      };
-      reader.onerror = () => {
-        onError?.('Failed to read file');
-        setIsProcessing(false);
       };
       reader.readAsDataURL(file);
       
@@ -96,7 +190,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
       setIsProcessing(false);
     }
 
-    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -121,6 +214,26 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           {isProcessing ? 'Processing...' : 'Click to upload QR code'}
         </p>
       </div>
+    </div>
+  );
+
+  const cameraSection = (
+    <div className="w-full max-w-sm mx-auto relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
+      <div className="relative bg-black/50 p-4 rounded-2xl overflow-hidden">
+        <video 
+          ref={videoRef}
+          autoPlay 
+          playsInline 
+          muted 
+          className="w-full rounded-xl"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        <div className="absolute inset-0 border-2 border-green-500/40 rounded-xl pointer-events-none" />
+      </div>
+      <p className="text-green-400 text-center mt-4">
+        Position the QR code within the frame
+      </p>
     </div>
   );
 
@@ -183,12 +296,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
 
             {/* Content Area */}
             <div className="flex-1 flex flex-col items-center justify-center p-4">
-              {!isMobile || !isCameraMode ? uploadSection : (
-                <div className="text-center">
-                  <p className="text-green-400 mb-4">Camera functionality coming soon!</p>
-                  {uploadSection}
-                </div>
-              )}
+              {isMobile && isCameraMode ? cameraSection : uploadSection}
             </div>
           </motion.div>
         )}
