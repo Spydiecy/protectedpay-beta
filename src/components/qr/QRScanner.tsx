@@ -34,6 +34,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         try {
           const hints = new Map();
           hints.set(DecodeHintType.TRY_HARDER, true);
+          hints.set(DecodeHintType.POSSIBLE_FORMATS, ['QR_CODE']);
           
           const codeReader = new BrowserQRCodeReader(hints, {
             delayBetweenScanAttempts: 100,
@@ -41,32 +42,34 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           });
 
           const constraints = {
-            facingMode: 'environment',
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            video: {
+              facingMode: 'environment',
+              width: { ideal: 1920, min: 720 },
+              height: { ideal: 1080, min: 480 },
+              frameRate: { ideal: 30 }
+            }
           };
 
           const controls = await codeReader.decodeFromConstraints(
-            { video: constraints },
+            constraints,
             videoRef.current,
             (result) => {
-              if (!mounted) return;
-              
-              if (result) {
+              if (!mounted || !result) return;
+
+              try {
+                const text = result.getText();
                 try {
-                  const text = result.getText();
                   const parsedData = JSON.parse(text);
                   if (parsedData.app === "ProtectedPay" && parsedData.address) {
                     handleSuccessfulScan(parsedData.address);
-                  } else if (text.startsWith('0x')) {
-                    handleSuccessfulScan(text);
                   }
                 } catch {
-                  const text = result.getText();
                   if (text.startsWith('0x')) {
                     handleSuccessfulScan(text);
                   }
                 }
+              } catch (err) {
+                console.error('Scan error:', err);
               }
             }
           );
@@ -91,7 +94,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     };
   }, [isOpen, isCameraMode]);
 
-  // Original working file upload code
+  // Simple and working file upload handler
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
