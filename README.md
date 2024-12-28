@@ -1,104 +1,149 @@
 # ProtectedPay
 
-ProtectedPay is a comprehensive DeFi platform on the NeoX blockchain that provides secure transfers, group payments, and smart savings features. Built with advanced security and user experience in mind, it offers multiple ways to manage and protect your crypto assets.
+ProtectedPay is a multi-chain DeFi platform providing secure transfers, group payments, and smart savings features across multiple blockchains. Built with advanced security and user experience in mind, it offers comprehensive ways to manage and protect your crypto assets.
 
-![image](https://github.com/user-attachments/assets/ea8a2e94-dad2-48cd-af7f-88e08d0e37a8)
-
-## Key Features
-
-### Secure Transfers
-- Protected transfers with funds held in smart contracts until claimed
-- Send to usernames or wallet addresses
-- Add remarks to track transfer purposes
-- Easy refunds for unclaimed transfers
-
-### Group Payments
-- Create group payment pools
-- Automatic splitting of bills and expenses
-- Real-time progress tracking
-- Instant distribution when target is met
-- Perfect for shared expenses and team payments
-
-### Savings Pots
-- Create personal savings goals
-- Track progress towards targets
-- Contribute anytime
-- Break pots when needed
-- Set remarks for saving purposes
-
-### User Features
-- Optional username registration
-- Comprehensive transaction history
-- Real-time balance tracking
-- Detailed activity dashboard
-- Progress visualization
-
-## How It Works
-
-### Secure Transfers
-![image](https://github.com/user-attachments/assets/0522d7ca-f364-40f2-a071-71ad63abc72e)
-1. Send funds to username or address
-2. Add remarks for context
-3. Recipient claims funds
-4. Option to refund if unclaimed
-
-### Group Payments
-![image](https://github.com/user-attachments/assets/43f78c9e-ecb2-47d4-8bec-6e506fc3ad29)
-1. Create payment with target amount
-2. Set number of participants
-3. Members contribute their share
-4. Automatic distribution when complete
-
-### Savings Pots
-![image](https://github.com/user-attachments/assets/26fcdbc5-a6d3-4e48-84d9-ba6ac28613ac)
-1. Create pot with target amount
-2. Add funds progressively
-3. Track savings progress
-4. Break pot to withdraw funds
-
-## User Interface
-
-![image](https://github.com/user-attachments/assets/39e544b8-92a4-4d72-b04e-668212a2b321)
-
-### Modern Design
-- Dark theme with neon accents
-- Glassmorphism effects
-- Responsive layout
-- Interactive animations
-- Real-time updates
-
-### Dashboard Features
-- Activity history
-- Transaction tracking
-- Progress visualization
-- Quick actions
-- Status indicators
-
-## Security
-
-- Smart contract secured
-- Protected transfers
-- Non-custodial design
-- Safe fund recovery
-- Transparent transactions
-
-## Video Demo
-
-Watch ProtectedPay in action:
-[Demo Video](video_link)
-
-## Smart Contract
-
-Deployed on NeoX:
-- Contract Address: 0xF93132d75c20EfeD556EC2Bc5aC777750665D3a9
-- Verified on NeoX Explorer
-
-## Support
-
-For questions or issues:
-- Email: tanishqgupta322@gmail.com
-- Open an issue in this repository
+![image](https://github.com/user-attachments/assets/b7123e5c-c9c7-480e-9aea-0272f7ee87d6)
 
 ---
 
-ProtectedPay - Secure Transfers, Group Payments, and Smart Savings on NeoX
+## Supported Chains
+
+Currently supporting:  
+<p align="left">
+    <img align="left" src="/public/chains/neox.png" width="40" height="40" style="margin-right: 10px;"></img>
+    <img align="left" src="https://raw.githubusercontent.com/Spydiecy/ProtectedPay/refs/heads/main/public/chains/educhain.png" width="40" height="40" style="margin-right: 10px;"></img>
+    <img align="left" src="/public/chains/flow.png" width="40" height="40" style="margin-right: 10px;"></img>
+    <img align="left" src="/public/chains/kaia.png" width="40" height="40" style="margin-right: 10px;"></img>
+</p>
+
+<br clear="left"/>
+
+---
+
+## Key Features
+
+### Protected Cross-Chain Transfers
+- Secure transfers across multiple blockchains.
+- Smart contract protection until claimed.  
+- Username or wallet address transfers.  
+- Custom remarks for tracking.  
+- Easy refunds for unclaimed transfers.  
+
+### Group Payments
+- Multi-chain payment pools.  
+- Automatic expense splitting.  
+- Real-time contribution tracking.  
+- Instant distribution upon completion.  
+- Cross-chain participant support.  
+
+### Savings Pots
+- Chain-specific savings goals.  
+- Progress tracking per network.  
+- Flexible contribution system.  
+- Emergency withdrawal options.  
+- Purpose-specific savings tracking.  
+
+---
+
+## User Features
+- **Cross-chain username system**: Register an optional username.  
+- **Multi-chain transaction history**: Detailed and unified.  
+- **Network-specific balance tracking**: Real-time.  
+- **Unified activity dashboard**: Easy access to all features.  
+- **Chain-aware progress visualization**: Enhanced user insights.  
+
+---
+
+## Telegram Integration
+- Access via **@protectedpay_bot**.  
+- Send and receive assets across chains.  
+- Track transactions and savings.  
+- Manage funds effortlessly.  
+- Get instant notifications.  
+
+---
+
+## How It Works
+
+### Protected Transfers
+![image](https://github.com/user-attachments/assets/e638bf1f-d5a0-4162-8250-ed3f8eb02ae6)
+1. Select chain and connect wallet.  
+2. Send to username or wallet address.  
+3. Recipient claims securely.  
+4. Refund option if unclaimed.  
+
+### Group Payments
+![image](https://github.com/user-attachments/assets/5dae6ac5-04ea-4a2b-a804-164d674b5e29)
+1. Create multi-chain payment pool.  
+2. Set participants and target amounts.  
+3. Accept cross-chain contributions.  
+4. Automatic distribution.  
+
+### Savings Pots  
+![image](https://github.com/user-attachments/assets/a1d0afed-e019-4210-8f0a-e4c561a0a399)
+1. Select chain for savings.  
+2. Set a target amount.  
+3. Track progress.  
+4. Flexible withdrawals.  
+
+---
+
+## User Interface
+
+![image](https://github.com/user-attachments/assets/30e60cb0-f90f-4e7a-9484-d24e31d3fcf9)
+
+### Modern Design  
+- Chain-specific theming.  
+- Glassmorphism effects.  
+- Responsive layout.  
+- Network-aware animations.  
+- Real-time cross-chain updates.
+
+![image](https://github.com/user-attachments/assets/60614fd7-e999-4b02-86b3-b38391f7f123)
+
+### Dashboard Features  
+- Multi-chain activity tracking.  
+- Cross-network transactions.  
+- Chain-specific progress.  
+- Network switching.  
+- Status indicators.  
+
+---
+
+## Security  
+- **Chain-specific smart contracts**: Secure and efficient.  
+- **Protected cross-chain transfers**: Built-in safeguards.  
+- **Non-custodial architecture**: User-controlled funds.  
+- **Secure fund recovery**: Transparent operations.  
+
+---
+
+## Deployed Contracts
+
+### NeoX Testnet  
+- **Contract**: `0xF93132d75c20EfeD556EC2Bc5aC777750665D3a9`  
+
+### Educhain Testnet  
+- **Contract**: `0x03c4fb7563e593ca0625C1c64959AC56081785cE`
+  
+### Flow Testnet  
+- **Contract**: `0xF887B4D3b17C12C86cc917cF72fb8881f866a847`  
+
+### KAIA Testnet  
+- **Contract**: `0xca36dd890f987edce1d6d7c74fb9df627c216bf6`  
+
+---
+
+## Quick Links
+- **[Telegram Bot](https://t.me/protectedpay_bot)**  
+- **[Video Demo](#)**  
+
+---
+
+## Support
+For any queries or issues:  
+- **Email**: tanishqgupta322@gmail.com  
+
+--- 
+
+**ProtectedPay** - Secure Multi-Chain Transfers, Group Payments, and Smart Savings! 🚀
