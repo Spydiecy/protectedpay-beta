@@ -22,40 +22,21 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const hasScannedRef = useRef(false);
 
   useEffect(() => {
     if (isOpen && isCameraMode && isMobile) {
-      const config = {
-        experimentalFeatures: {
-          useBarCodeDetectorIfSupported: true
-        },
-        verbose: false
-      };
-
-      const newScanner = new Html5Qrcode("reader", config);
+      // Initialize scanner
+      const newScanner = new Html5Qrcode("reader");
       setScanner(newScanner);
 
-      const cameraConfig = {
-        frameRate: { ideal: 30, min: 15 },
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-        facingMode: { ideal: 'environment' }
-      };
-
       newScanner.start(
-        cameraConfig,
+        { facingMode: "environment" },
         {
-          fps: 30,
-          qrbox: { width: 300, height: 300 },
-          aspectRatio: 1.0,
-          disableFlip: false,
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
         },
         (decodedText) => {
-          if (hasScannedRef.current) return;
-          
           try {
-            hasScannedRef.current = true;
             const parsedData = JSON.parse(decodedText);
             if (parsedData.app === "ProtectedPay" && parsedData.address) {
               handleSuccessfulScan(parsedData.address);
@@ -64,10 +45,10 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
             if (decodedText.startsWith('0x')) {
               handleSuccessfulScan(decodedText);
             }
-            hasScannedRef.current = false;
           }
         },
         (errorMessage) => {
+          // Suppress continuous scanning errors
           if (errorMessage.includes("No QR code found")) return;
           console.error(errorMessage);
         }
@@ -83,7 +64,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         scanner.stop().catch(console.error);
         setScanner(null);
       }
-      hasScannedRef.current = false;
     };
   }, [isOpen, isCameraMode]);
 
@@ -93,7 +73,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     }
     onScan(data);
     setIsOpen(false);
-    hasScannedRef.current = false;
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -103,13 +82,17 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     setIsProcessing(true);
 
     try {
+      // Create a canvas to draw the image
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
 
       img.onload = async () => {
+        // Set canvas size to match image
         canvas.width = img.width;
         canvas.height = img.height;
+
+        // Draw image onto canvas
         ctx?.drawImage(img, 0, 0);
 
         try {
@@ -148,6 +131,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         setIsProcessing(false);
       };
 
+      // Read the file as data URL
       const reader = new FileReader();
       reader.onload = (e) => {
         if (typeof e.target?.result === 'string') {
@@ -165,6 +149,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
       setIsProcessing(false);
     }
 
+    // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -246,10 +231,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                     <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
                     <div className="relative bg-black/50 p-4 rounded-2xl">
                       <div id="reader" className="overflow-hidden rounded-xl"></div>
-                      {/* Scanning Guide Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-[300px] h-[300px] border-2 border-green-400/50 rounded-lg"></div>
-                      </div>
                     </div>
                     <p className="text-green-400 text-center mt-4">
                       Position the QR code within the frame
@@ -306,34 +287,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           (e.target as HTMLInputElement).value = '';
         }}
       />
-
-      {/* Custom styles for scanner UI */}
-      <style jsx global>{`
-        #reader {
-          width: 100% !important;
-          border: none !important;
-        }
-        #reader video {
-          border-radius: 0.75rem;
-        }
-        #reader__scan_region {
-          background: transparent !important;
-        }
-        #reader__scan_region img {
-          display: none;
-        }
-        #reader__dashboard {
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-        }
-        #reader__camera_selection {
-          display: none !important;
-        }
-        #reader__status_span {
-          display: none !important;
-        }
-      `}</style>
     </>
   );
 };
