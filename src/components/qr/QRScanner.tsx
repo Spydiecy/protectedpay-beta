@@ -9,7 +9,8 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { isMobile } from 'react-device-detect';
-import { Html5Qrcode } from 'html5-qrcode';
+import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
+import { DecodeHintType } from '@zxing/library';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -20,61 +21,77 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCameraMode, setIsCameraMode] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [scanner, setScanner] = useState<Html5Qrcode | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
 
+  // Camera scanning setup
   useEffect(() => {
-    if (isOpen && isCameraMode && isMobile) {
-      const newScanner = new Html5Qrcode("reader");
-      setScanner(newScanner);
+    let mounted = true;
 
-      newScanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 15,
-          qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-        },
-        (decodedText) => {
-          try {
-            const parsedData = JSON.parse(decodedText);
-            if (parsedData.app === "ProtectedPay" && parsedData.address) {
-              handleSuccessfulScan(parsedData.address);
+    const initializeScanner = async () => {
+      if (isOpen && isCameraMode && isMobile && videoRef.current) {
+        try {
+          const hints = new Map();
+          hints.set(DecodeHintType.TRY_HARDER, true);
+          
+          const codeReader = new BrowserQRCodeReader(hints, {
+            delayBetweenScanAttempts: 100,
+            delayBetweenScanSuccess: 300
+          });
+
+          const constraints = {
+            facingMode: 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          };
+
+          const controls = await codeReader.decodeFromConstraints(
+            { video: constraints },
+            videoRef.current,
+            (result) => {
+              if (!mounted) return;
+              
+              if (result) {
+                try {
+                  const text = result.getText();
+                  const parsedData = JSON.parse(text);
+                  if (parsedData.app === "ProtectedPay" && parsedData.address) {
+                    handleSuccessfulScan(parsedData.address);
+                  } else if (text.startsWith('0x')) {
+                    handleSuccessfulScan(text);
+                  }
+                } catch {
+                  const text = result.getText();
+                  if (text.startsWith('0x')) {
+                    handleSuccessfulScan(text);
+                  }
+                }
+              }
             }
-          } catch {
-            if (decodedText.startsWith('0x')) {
-              handleSuccessfulScan(decodedText);
-            }
-          }
-        },
-        (errorMessage) => {
-          // Suppress continuous scanning errors
-          if (errorMessage.includes("No QR code found")) return;
-          console.error(errorMessage);
+          );
+
+          controlsRef.current = controls;
+        } catch (err) {
+          console.error('Scanner initialization error:', err);
+          onError?.('Failed to start camera');
+          setIsCameraMode(false);
         }
-      ).catch((err) => {
-        console.error('Scanner start error:', err);
-        onError?.('Failed to start camera');
-        setIsCameraMode(false);
-      });
-    }
+      }
+    };
+
+    initializeScanner();
 
     return () => {
-      if (scanner) {
-        scanner.stop().catch(console.error);
-        setScanner(null);
+      mounted = false;
+      if (controlsRef.current) {
+        controlsRef.current.stop();
+        controlsRef.current = null;
       }
     };
   }, [isOpen, isCameraMode]);
 
-  const handleSuccessfulScan = (data: string) => {
-    if (scanner) {
-      scanner.stop().catch(console.error);
-    }
-    onScan(data);
-    setIsOpen(false);
-  };
-
+  // Original working file upload code
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -149,6 +166,15 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     }
   };
 
+  const handleSuccessfulScan = (data: string) => {
+    if (controlsRef.current) {
+      controlsRef.current.stop();
+      controlsRef.current = null;
+    }
+    onScan(data);
+    setIsOpen(false);
+  };
+
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -191,8 +217,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                     <button
                       onClick={() => {
                         setIsCameraMode(false);
-                        if (scanner) {
-                          scanner.stop().catch(console.error);
+                        if (controlsRef.current) {
+                          controlsRef.current.stop();
                         }
                         triggerFileInput();
                       }}
@@ -204,8 +230,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                 )}
                 <motion.button
                   onClick={() => {
-                    if (scanner) {
-                      scanner.stop().catch(console.error);
+                    if (controlsRef.current) {
+                      controlsRef.current.stop();
                     }
                     setIsOpen(false);
                   }}
@@ -225,10 +251,14 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                   <div className="w-full max-w-sm mx-auto relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
                     <div className="relative bg-black/50 p-4 rounded-2xl">
-                      <div id="reader" className="overflow-hidden rounded-xl"></div>
+                      <video
+                        ref={videoRef}
+                        className="w-full rounded-xl"
+                        style={{ maxHeight: '70vh' }}
+                      />
                       {/* Scanning Guide Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-[250px] h-[250px] border-2 border-green-400/50 rounded-lg"></div>
+                        <div className="w-64 h-64 border-2 border-green-400/50 rounded-lg"></div>
                       </div>
                     </div>
                     <p className="text-green-400 text-center mt-4">
@@ -286,34 +316,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
           (e.target as HTMLInputElement).value = '';
         }}
       />
-
-      {/* Custom styles for scanner UI */}
-      <style jsx global>{`
-        #reader {
-          width: 100% !important;
-          border: none !important;
-        }
-        #reader video {
-          border-radius: 0.75rem;
-        }
-        #reader__scan_region {
-          background: transparent !important;
-        }
-        #reader__scan_region img {
-          display: none;
-        }
-        #reader__dashboard {
-          background: transparent !important;
-          border: none !important;
-          padding: 0 !important;
-        }
-        #reader__camera_selection {
-          display: none !important;
-        }
-        #reader__status_span {
-          display: none !important;
-        }
-      `}</style>
     </>
   );
 };
