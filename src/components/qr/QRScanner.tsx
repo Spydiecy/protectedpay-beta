@@ -1,5 +1,5 @@
 // components/qr/QRScanner.tsx
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCodeIcon, 
@@ -25,11 +25,18 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const controlsRef = useRef<IScannerControls | null>(null);
 
-  // Camera scanning setup
-  // Update this part in your useEffect for camera scanning
-useEffect(() => {
+  const handleSuccessfulScan = useCallback((data: string) => {
+    if (controlsRef.current) {
+      controlsRef.current.stop();
+      controlsRef.current = null;
+    }
+    onScan(data);
+    setIsOpen(false);
+  }, [onScan]);
+
+  useEffect(() => {
     let mounted = true;
-  
+
     const initializeScanner = async () => {
       if (isOpen && isCameraMode && isMobile && videoRef.current) {
         try {
@@ -37,10 +44,10 @@ useEffect(() => {
           hints.set(DecodeHintType.TRY_HARDER, true);
           
           const codeReader = new BrowserQRCodeReader(hints, {
-            delayBetweenScanAttempts: 50,  // Faster scanning
-            delayBetweenScanSuccess: 100   // Quicker success handling
+            delayBetweenScanAttempts: 50,
+            delayBetweenScanSuccess: 100
           });
-  
+
           const constraints = {
             video: {
               facingMode: 'environment',
@@ -50,7 +57,7 @@ useEffect(() => {
               frameRate: { ideal: 30 }
             }
           };
-  
+
           const controls = await codeReader.decodeFromConstraints(
             constraints,
             videoRef.current,
@@ -58,19 +65,17 @@ useEffect(() => {
               if (!mounted || !result) return;
               
               const text = result.getText();
-              console.log('Scanned QR data:', text); // For debugging
-  
+              console.log('Scanned QR data:', text);
+
               try {
-                // First try parsing as JSON
                 const parsedData = JSON.parse(text);
-                console.log('Parsed data:', parsedData); // For debugging
+                console.log('Parsed data:', parsedData);
                 
                 if (parsedData.app === "ProtectedPay" && parsedData.address) {
                   handleSuccessfulScan(parsedData.address);
                   return;
                 }
-              } catch (err) {
-                // If JSON parsing fails, check if it's a direct address
+              } catch {
                 if (text.startsWith('0x')) {
                   handleSuccessfulScan(text);
                   return;
@@ -78,18 +83,18 @@ useEffect(() => {
               }
             }
           );
-  
+
           controlsRef.current = controls;
-        } catch (err) {
-          console.error('Scanner initialization error:', err);
+        } catch (error) {
+          console.error('Scanner initialization error:', error);
           onError?.('Failed to start camera');
           setIsCameraMode(false);
         }
       }
     };
-  
+
     initializeScanner();
-  
+
     return () => {
       mounted = false;
       if (controlsRef.current) {
@@ -97,9 +102,8 @@ useEffect(() => {
         controlsRef.current = null;
       }
     };
-  }, [isOpen, isCameraMode]);
+  }, [isOpen, isCameraMode, handleSuccessfulScan, onError]);
 
-  // Simple and working file upload handler
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -140,8 +144,8 @@ useEffect(() => {
               onError?.('No QR code found in image');
             }
           }
-        } catch (err) {
-          onError?.(err instanceof Error ? err.message : 'Failed to read QR code');
+        } catch (error) {
+          onError?.(error instanceof Error ? error.message : 'Failed to read QR code');
         }
         
         setIsProcessing(false);
@@ -164,8 +168,8 @@ useEffect(() => {
       };
       reader.readAsDataURL(file);
       
-    } catch (err) {
-      onError?.(err instanceof Error ? err.message : 'Failed to process image');
+    } catch (error) {
+      onError?.(error instanceof Error ? error.message : 'Failed to process image');
       setIsProcessing(false);
     }
 
@@ -174,22 +178,12 @@ useEffect(() => {
     }
   };
 
-  const handleSuccessfulScan = (data: string) => {
-    if (controlsRef.current) {
-      controlsRef.current.stop();
-      controlsRef.current = null;
-    }
-    onScan(data);
-    setIsOpen(false);
-  };
-
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
 
   return (
     <>
-      {/* Floating Button */}
       <motion.button
         onClick={() => setIsOpen(true)}
         className="fixed bottom-8 right-8 p-4 bg-black/80 backdrop-blur-xl rounded-full border border-green-500/20 text-green-400 shadow-lg shadow-green-500/20 z-40 hover:bg-green-500/20 transition-colors"
@@ -201,7 +195,6 @@ useEffect(() => {
         <QrCodeIcon className="w-6 h-6" />
       </motion.button>
 
-      {/* Scanner Modal */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -210,7 +203,6 @@ useEffect(() => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Header */}
             <div className="p-4 flex justify-between items-center border-b border-green-500/20 bg-black/40">
               <h2 className="text-lg font-semibold text-green-400">Scan QR Code</h2>
               <div className="flex items-center space-x-4">
@@ -252,7 +244,6 @@ useEffect(() => {
               </div>
             </div>
 
-            {/* Content Area */}
             <div className="flex-1 flex flex-col items-center justify-center p-4">
               {isMobile ? (
                 isCameraMode ? (
@@ -264,7 +255,6 @@ useEffect(() => {
                         className="w-full rounded-xl"
                         style={{ maxHeight: '70vh' }}
                       />
-                      {/* Scanning Guide Overlay */}
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-64 h-64 border-2 border-green-400/50 rounded-lg"></div>
                       </div>
@@ -312,7 +302,6 @@ useEffect(() => {
         )}
       </AnimatePresence>
 
-      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
