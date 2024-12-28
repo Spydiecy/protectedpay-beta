@@ -20,7 +20,6 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCameraMode, setIsCameraMode] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
@@ -56,7 +55,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                 if (parsedData.app === "ProtectedPay" && parsedData.address) {
                   handleSuccessfulScan(parsedData.address);
                 }
-              } catch (error) {
+              } catch {
                 if (decodedText.startsWith('0x')) {
                   handleSuccessfulScan(decodedText);
                 }
