@@ -31,7 +31,8 @@
     "react-qr-code": "^2.0.15",
     "react-qr-scanner": "^1.0.0-alpha.11",
     "viem": "^2.21.54",
-    "wagmi": "^2.13.4"
+    "wagmi": "^2.13.4",
+    "zbar.wasm": "^2.1.1"
   },
   "devDependencies": {
     "@types/node": "^20",

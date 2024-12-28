@@ -9,8 +9,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { isMobile } from 'react-device-detect';
-import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
-import { DecodeHintType } from '@zxing/library';
+import { Html5Qrcode } from 'html5-qrcode';
 
 interface QRScannerProps {
   onScan: (data: string) => void;
@@ -23,12 +22,12 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const controlsRef = useRef<IScannerControls | null>(null);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const handleSuccessfulScan = useCallback((data: string) => {
-    if (controlsRef.current) {
-      controlsRef.current.stop();
-      controlsRef.current = null;
+    if (scannerRef.current) {
+      scannerRef.current.stop().catch(console.error);
+      scannerRef.current = null;
     }
     onScan(data);
     setIsOpen(false);
@@ -37,69 +36,49 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   useEffect(() => {
     let mounted = true;
 
-    const initializeScanner = async () => {
-      if (isOpen && isCameraMode && isMobile && videoRef.current) {
+    const startScanner = async () => {
+      if (isOpen && isCameraMode && isMobile) {
         try {
-          const hints = new Map();
-          hints.set(DecodeHintType.TRY_HARDER, true);
-          
-          const codeReader = new BrowserQRCodeReader(hints, {
-            delayBetweenScanAttempts: 50,
-            delayBetweenScanSuccess: 100
-          });
+          const scanner = new Html5Qrcode("reader");
+          scannerRef.current = scanner;
 
-          const constraints = {
-            video: {
-              facingMode: 'environment',
-              width: { min: 640, ideal: 1280, max: 1920 },
-              height: { min: 480, ideal: 720, max: 1080 },
-              aspectRatio: { ideal: 1.7777777778 },
-              frameRate: { ideal: 30 }
-            }
-          };
-
-          const controls = await codeReader.decodeFromConstraints(
-            constraints,
-            videoRef.current,
-            (result) => {
-              if (!mounted || !result) return;
-              
-              const text = result.getText();
-              console.log('Scanned QR data:', text);
-
+          await scanner.start(
+            { facingMode: "environment" },
+            {
+              fps: 10,
+              qrbox: { width: 250, height: 250 },
+            },
+            (decodedText) => {
+              if (!mounted) return;
               try {
-                const parsedData = JSON.parse(text);
-                console.log('Parsed data:', parsedData);
-                
+                const parsedData = JSON.parse(decodedText);
+                console.log("Scanned data:", parsedData);
                 if (parsedData.app === "ProtectedPay" && parsedData.address) {
                   handleSuccessfulScan(parsedData.address);
-                  return;
                 }
-              } catch {
-                if (text.startsWith('0x')) {
-                  handleSuccessfulScan(text);
-                  return;
+              } catch (error) {
+                if (decodedText.startsWith('0x')) {
+                  handleSuccessfulScan(decodedText);
                 }
               }
-            }
+            },
+            undefined
           );
-
-          controlsRef.current = controls;
         } catch (error) {
-          console.error('Scanner initialization error:', error);
+          console.error('Scanner error:', error);
           onError?.('Failed to start camera');
           setIsCameraMode(false);
         }
       }
     };
 
-    initializeScanner();
+    startScanner();
 
     return () => {
       mounted = false;
-      if (controlsRef.current) {
-        controlsRef.current.stop();
-        controlsRef.current = null;
+      if (scannerRef.current) {
+        scannerRef.current.stop().catch(console.error);
+        scannerRef.current = null;
       }
     };
   }, [isOpen, isCameraMode, handleSuccessfulScan, onError]);
@@ -217,8 +196,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                     <button
                       onClick={() => {
                         setIsCameraMode(false);
-                        if (controlsRef.current) {
-                          controlsRef.current.stop();
+                        if (scannerRef.current) {
+                          scannerRef.current.stop().catch(console.error);
                         }
                         triggerFileInput();
                       }}
@@ -230,8 +209,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                 )}
                 <motion.button
                   onClick={() => {
-                    if (controlsRef.current) {
-                      controlsRef.current.stop();
+                    if (scannerRef.current) {
+                      scannerRef.current.stop().catch(console.error);
                     }
                     setIsOpen(false);
                   }}
@@ -250,11 +229,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
                   <div className="w-full max-w-sm mx-auto relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-2xl blur-xl" />
                     <div className="relative bg-black/50 p-4 rounded-2xl">
-                      <video
-                        ref={videoRef}
-                        className="w-full rounded-xl"
-                        style={{ maxHeight: '70vh' }}
-                      />
+                      <div id="reader" className="overflow-hidden rounded-xl"></div>
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="w-64 h-64 border-2 border-green-400/50 rounded-lg"></div>
                       </div>
