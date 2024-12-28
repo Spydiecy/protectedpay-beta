@@ -26,54 +26,59 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const controlsRef = useRef<IScannerControls | null>(null);
 
   // Camera scanning setup
-  useEffect(() => {
+  // Update this part in your useEffect for camera scanning
+useEffect(() => {
     let mounted = true;
-
+  
     const initializeScanner = async () => {
       if (isOpen && isCameraMode && isMobile && videoRef.current) {
         try {
           const hints = new Map();
           hints.set(DecodeHintType.TRY_HARDER, true);
-          hints.set(DecodeHintType.POSSIBLE_FORMATS, ['QR_CODE']);
           
           const codeReader = new BrowserQRCodeReader(hints, {
-            delayBetweenScanAttempts: 100,
-            delayBetweenScanSuccess: 300
+            delayBetweenScanAttempts: 50,  // Faster scanning
+            delayBetweenScanSuccess: 100   // Quicker success handling
           });
-
+  
           const constraints = {
             video: {
               facingMode: 'environment',
-              width: { ideal: 1920, min: 720 },
-              height: { ideal: 1080, min: 480 },
+              width: { min: 640, ideal: 1280, max: 1920 },
+              height: { min: 480, ideal: 720, max: 1080 },
+              aspectRatio: { ideal: 1.7777777778 },
               frameRate: { ideal: 30 }
             }
           };
-
+  
           const controls = await codeReader.decodeFromConstraints(
             constraints,
             videoRef.current,
             (result) => {
               if (!mounted || !result) return;
-
+              
+              const text = result.getText();
+              console.log('Scanned QR data:', text); // For debugging
+  
               try {
-                const text = result.getText();
-                try {
-                  const parsedData = JSON.parse(text);
-                  if (parsedData.app === "ProtectedPay" && parsedData.address) {
-                    handleSuccessfulScan(parsedData.address);
-                  }
-                } catch {
-                  if (text.startsWith('0x')) {
-                    handleSuccessfulScan(text);
-                  }
+                // First try parsing as JSON
+                const parsedData = JSON.parse(text);
+                console.log('Parsed data:', parsedData); // For debugging
+                
+                if (parsedData.app === "ProtectedPay" && parsedData.address) {
+                  handleSuccessfulScan(parsedData.address);
+                  return;
                 }
               } catch (err) {
-                console.error('Scan error:', err);
+                // If JSON parsing fails, check if it's a direct address
+                if (text.startsWith('0x')) {
+                  handleSuccessfulScan(text);
+                  return;
+                }
               }
             }
           );
-
+  
           controlsRef.current = controls;
         } catch (err) {
           console.error('Scanner initialization error:', err);
@@ -82,9 +87,9 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
         }
       }
     };
-
+  
     initializeScanner();
-
+  
     return () => {
       mounted = false;
       if (controlsRef.current) {
