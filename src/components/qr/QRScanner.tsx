@@ -32,7 +32,7 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
       newScanner.start(
         { facingMode: "environment" },
         {
-          fps: 10,
+          fps: 30,
           qrbox: { width: 250, height: 250 },
         },
         (decodedText) => {
