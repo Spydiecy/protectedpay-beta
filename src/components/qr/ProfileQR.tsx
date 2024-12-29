@@ -11,6 +11,16 @@ interface ProfileQRProps {
 
 const ProfileQR: React.FC<ProfileQRProps> = ({ username, address, onClose }) => {
   const qrRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
+
+  React.useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const qrData = JSON.stringify({
     app: "ProtectedPay",
@@ -65,7 +75,7 @@ const ProfileQR: React.FC<ProfileQRProps> = ({ username, address, onClose }) => 
     <div className="w-full flex flex-col md:flex-row md:items-stretch md:gap-8">
       {/* Left side - QR Code */}
       <div className="flex-1 flex flex-col items-center md:justify-center md:min-w-[300px] sm:min-w-[200px]">
-      <div className="relative group">
+      <div className="relative group"></div>
         <div className="absolute -inset-4 bg-gradient-to-r from-green-500/20 via-emerald-500/20 to-green-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-500" />
         
         <motion.div 
@@ -76,7 +86,7 @@ const ProfileQR: React.FC<ProfileQRProps> = ({ username, address, onClose }) => 
         >
         <QRCodeSVG
           value={qrData}
-          size={200}
+          size={isMobile ? 200 : 300}
           level="H"
           includeMargin={true}
           bgColor="#111111"
@@ -85,13 +95,12 @@ const ProfileQR: React.FC<ProfileQRProps> = ({ username, address, onClose }) => 
           src: "/logo.png",
           x: undefined,
           y: undefined,
-          height: 30,
-          width: 30,
+          height: isMobile ? 30 : 45,
+          width: isMobile ? 30 : 45,
           excavate: true,
           }}
         />
         </motion.div>
-      </div>
       </div>
 
       {/* Right side - Content */}
@@ -154,4 +163,3 @@ const ProfileQR: React.FC<ProfileQRProps> = ({ username, address, onClose }) => 
 };
 
 export default ProfileQR;
-
