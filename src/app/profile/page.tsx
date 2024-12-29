@@ -358,7 +358,7 @@ export default function ProfilePage() {
               {transfer.sender === userAddress ? 'Sent to:' : 'Received from:'}
             </p>
             <p className="text-green-400">
-              {transfer.sender === userAddress ? transfer.recipient : transfer.sender}
+              {transfer.sender === userAddress ? `${transfer.recipient.slice(0, 6)}...${transfer.recipient.slice(-4)}` : `${transfer.sender.slice(0, 6)}...${transfer.sender.slice(-4)}`}
             </p>
           </div>
           <div className="text-right">
@@ -814,43 +814,45 @@ const SavingsPotCard: React.FC<SavingsPotCardProps> = ({ pot }) => {
       </AnimatePresence>
 
       {/* QR Code Modal */}
-<AnimatePresence>
-  {showQR && (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-      onClick={() => setShowQR(false)}
-    >
-      <motion.div
-        onClick={e => e.stopPropagation()}
-        className="w-full max-w-sm relative"
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        <div className="relative bg-black/90 rounded-2xl border border-green-500/20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-emerald-500/10 rounded-2xl blur-xl" />
-          <div className="relative p-6">
-            <button
-              onClick={() => setShowQR(false)}
-              className="absolute right-4 top-4 p-2 rounded-xl bg-black/30 text-gray-400 hover:text-white transition-colors"
+      <AnimatePresence>
+      {showQR && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+          onClick={() => setShowQR(false)}
+        >
+          <div className="w-full min-h-screen pt-[72px] px-4 pb-4 overflow-y-auto">
+            <motion.div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-4xl mx-auto"
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.2 }}
             >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-            <ProfileQR
-              username={registeredUsername}
-              address={address || ''}
-              onClose={() => setShowQR(false)}
-            />
+              <div className="relative bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-3xl border border-green-500/20 overflow-hidden backdrop-blur-xl shadow-2xl">
+                <div className="absolute inset-0 bg-gradient-to-b from-green-500/10 to-emerald-500/10 rounded-3xl blur-xl" />
+                <div className="relative p-6 md:p-8">
+                  <button
+                    onClick={() => setShowQR(false)}
+                    className="absolute right-4 top-4 p-2 rounded-xl bg-black/30 text-gray-400 hover:text-white transition-colors"
+                  >
+                    <XMarkIcon className="w-6 h-6" />
+                  </button>
+                  <ProfileQR
+                    username={registeredUsername}
+                    address={address || ''}
+                    onClose={() => setShowQR(false)}
+                  />
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      </motion.div>
-    </motion.div>
-  )}
-</AnimatePresence>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-// components/qr/QRScanner.tsx
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -20,41 +19,50 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCameraMode, setIsCameraMode] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isScanning, setIsScanning] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const cleanupScanner = useCallback(async () => {
+    if (!scannerRef.current) return;
+
     try {
-      if (scannerRef.current) {
+      if (isScanning) {
         await scannerRef.current.stop();
-        await new Promise(resolve => setTimeout(resolve, 100)); // Give time for cleanup
-        scannerRef.current.clear();
-        scannerRef.current = null;
+        setIsScanning(false);
       }
+      
+      // Add a small delay before clearing
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      try {
+        scannerRef.current.clear();
+      } catch (clearError) {
+        console.debug('Clear error:', clearError);
+      }
+      
+      scannerRef.current = null;
     } catch (error) {
-      console.debug('Scanner cleanup error:', error);
+      console.debug('Cleanup error:', error);
     }
-  }, []);
+  }, [isScanning]);
 
   const handleClose = useCallback(async () => {
     try {
       await cleanupScanner();
-    } catch (error) {
-      console.debug('Close error:', error);
     } finally {
       setIsOpen(false);
+      setIsCameraMode(true);
     }
   }, [cleanupScanner]);
 
   const handleSuccessfulScan = useCallback(async (data: string) => {
     try {
       await cleanupScanner();
-    } catch (error) {
-      console.debug('Scan cleanup error:', error);
-    } finally {
       onScan(data);
+    } finally {
       setIsOpen(false);
+      setIsCameraMode(true);
     }
   }, [onScan, cleanupScanner]);
 
@@ -62,43 +70,45 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
     let mounted = true;
 
     const startScanner = async () => {
-      if (isOpen && isCameraMode && isMobile) {
-        try {
-          await cleanupScanner();
-          if (!mounted) return;
+      if (!isOpen || !isCameraMode || !isMobile || isScanning) return;
 
-          const scanner = new Html5Qrcode("reader");
-          scannerRef.current = scanner;
+      try {
+        await cleanupScanner();
+        if (!mounted) return;
 
-          await scanner.start(
-            { facingMode: "environment" },
-            {
-              fps: 10,
-              qrbox: { width: 250, height: 250 },
-              aspectRatio: 1.0
-            },
-            async (decodedText) => {
-              if (!mounted) return;
-              try {
-                const parsedData = JSON.parse(decodedText);
-                console.log("Scanned data:", parsedData);
-                if (parsedData.app === "ProtectedPay" && parsedData.address) {
-                  await handleSuccessfulScan(parsedData.address);
-                }
-              } catch (err) {
-                if (decodedText.startsWith('0x')) {
-                  await handleSuccessfulScan(decodedText);
-                }
+        const scanner = new Html5Qrcode("reader");
+        scannerRef.current = scanner;
+        setIsScanning(true);
+
+        await scanner.start(
+          { facingMode: "environment" },
+          {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            aspectRatio: 1.0
+          },
+          async (decodedText) => {
+            if (!mounted) return;
+            
+            try {
+              const parsedData = JSON.parse(decodedText);
+              if (parsedData.app === "ProtectedPay" && parsedData.address) {
+                await handleSuccessfulScan(parsedData.address);
               }
-            },
-            undefined
-          );
-        } catch (error) {
-          console.error('Scanner error:', error);
-          if (mounted) {
-            onError?.('Failed to start camera');
-            setIsCameraMode(false);
-          }
+            } catch {
+              if (decodedText.startsWith('0x')) {
+                await handleSuccessfulScan(decodedText);
+              }
+            }
+          },
+          undefined
+        );
+      } catch (error) {
+        console.error('Scanner error:', error);
+        if (mounted) {
+          onError?.('Failed to start camera');
+          setIsCameraMode(false);
+          setIsScanning(false);
         }
       }
     };
@@ -109,8 +119,8 @@ const QRScanner: React.FC<QRScannerProps> = ({ onScan, onError }) => {
       mounted = false;
       cleanupScanner().catch(console.debug);
     };
-  }, [isOpen, isCameraMode, handleSuccessfulScan, cleanupScanner, onError]);
-
+  }, [isOpen, isCameraMode, handleSuccessfulScan, cleanupScanner, onError, isScanning]);
+  
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
